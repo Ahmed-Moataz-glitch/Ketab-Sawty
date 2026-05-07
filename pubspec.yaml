@@ -1,0 +1,45 @@
+name: ketab_sawty
+description: "A new Flutter project."
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  animated_bottom_navigation_bar: ^1.4.0
+  cupertino_icons: ^1.0.8
+  file_picker: ^11.0.2
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.7
+  flutter_svg: ^2.2.4
+  flutter_tts: ^4.2.5
+  google_mlkit_text_recognition: ^0.15.1
+  just_audio: ^0.10.5
+  path_provider: ^2.1.5
+  pdfx: ^2.9.2
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/icons/
+
+  fonts:
+    - family: Tajawal
+      fonts:
+        - asset: assets/fonts/Tajawal-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Tajawal-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Tajawal-Bold.ttf
+          weight: 600
