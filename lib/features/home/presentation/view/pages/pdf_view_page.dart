@@ -33,10 +33,10 @@ class _PdfViewPageState extends State<PdfViewPage> {
     super.initState();
     _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // await widget.homeCubit.createAudioFile(
-      //   text: widget.extractedText.join(' '),
-      //   fileName: widget.pdfDetailsModel.title,
-      // );
+      await widget.homeCubit.createAudioFile(
+        text: widget.extractedText.join(' '),
+        fileName: widget.pdfDetailsModel.title,
+      );
       // widget.homeCubit.getCurrentWordIndex();
     });
   }
