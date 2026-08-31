@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
 
-Widget setUpPlayer(AudioPlayer audioPlayer) {
+Widget setUpPlayer({required AudioPlayer audioPlayer, required Duration audioPosition, required bool isLightTheme}) {
   return StreamBuilder<PlayerState>(
     stream: audioPlayer.playerStateStream,
     builder: (context, snapshot) {
@@ -29,7 +29,7 @@ Widget setUpPlayer(AudioPlayer audioPlayer) {
             shape: BoxShape.circle,
           ),
           child: IconButton(
-            icon: Icon(Icons.play_arrow, size: 45.sp, color: AppColors.primary),
+            icon: Icon(Icons.play_arrow, size: 45.sp, color: isLightTheme ? AppColors.primary : AppColors.textPrimary),
             iconSize: 64.sp,
             onPressed: audioPlayer.play,
           ),
@@ -45,15 +45,25 @@ Widget setUpPlayer(AudioPlayer audioPlayer) {
             shape: BoxShape.circle,
           ),
           child: IconButton(
-            icon: Icon(Icons.pause, size: 40.sp, color: AppColors.primary),
+            icon: Icon(Icons.pause, size: 40.sp, color: isLightTheme ? AppColors.primary : AppColors.textPrimary),
             onPressed: audioPlayer.pause,
           ),
         );
       } else {
-        return IconButton(
-          icon: Icon(Icons.replay, color: AppColors.primary),
-          iconSize: 64.sp,
-          onPressed: () => audioPlayer.seek(Duration.zero),
+        return Container(
+          alignment: Alignment.center,
+          margin: EdgeInsets.all(8.r),
+          width: 64.w,
+          height: 64.h,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            icon: Icon(Icons.replay, size: 45.sp, color: isLightTheme ? AppColors.primary : AppColors.textPrimary),
+            iconSize: 64.sp,
+            onPressed: () => audioPlayer.seek(Duration.zero),
+          ),
         );
       }
     },
@@ -66,7 +76,7 @@ Widget setUpSpeedControl(AudioPlayer audioPlayer) {
     builder: (context, snapshot) {
       final speed = snapshot.data ?? 1.0;
       return IconButton(
-        icon: Icon(Icons.speed, color: AppColors.white),
+        icon: Icon(Icons.speed, size: 40.sp, color: AppColors.white),
         onPressed: () {
           showDialog(
             context: context,
@@ -104,6 +114,7 @@ Widget setUpVolumeControl(AudioPlayer audioPlayer) {
       return IconButton(
         icon: Icon(
           volume > 0 ? Icons.volume_up : Icons.volume_off,
+          size: 40.sp,
           color: AppColors.white,
         ),
         onPressed: () {
@@ -138,24 +149,27 @@ Widget setUpVolumeControl(AudioPlayer audioPlayer) {
   );
 }
 
-Widget setUpProgressBar(AudioPlayer audioPlayer) {
+Widget setUpProgressBar({
+  required AudioPlayer audioPlayer,
+  required Duration audioPosition,
+}) {
   return StreamBuilder<Duration>(
     stream: audioPlayer.positionStream,
     builder: (context, snapshot) {
-      final position = snapshot.data ?? Duration.zero;
+      final position = snapshot.data ?? audioPosition;
       final duration = audioPlayer.duration ?? Duration.zero;
       return Slider(
         min: 0.0,
-        max: duration.inMilliseconds.toDouble(),
-        value: position.inMilliseconds.toDouble().clamp(
+        max: duration.inSeconds.toDouble(),
+        value: position.inSeconds.toDouble().clamp(
           0.0,
-          duration.inMilliseconds.toDouble(),
+          duration.inSeconds.toDouble(),
         ),
         activeColor: AppColors.white,
         inactiveColor: AppColors.grey.withAlpha(80),
         padding: EdgeInsets.symmetric(horizontal: 28.r),
         onChanged: (value) {
-          audioPlayer.seek(Duration(milliseconds: value.toInt()));
+          audioPlayer.seek(Duration(seconds: value.toInt()));
         },
       );
     },

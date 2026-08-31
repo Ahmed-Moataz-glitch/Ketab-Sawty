@@ -17,23 +17,33 @@ class AudioFileModelAdapter extends TypeAdapter<AudioFileModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return AudioFileModel(
+      id: fields[0] as String,
       coverImageBytes: fields[1] as Uint8List,
-      title: fields[2] as String,
-      author: fields[3] as String,
+      audioFilePath: fields[2] as String,
+      audioPosition: fields[3] as int,
+      audioDuration: fields[4] as int,
+      title: fields[5] as String,
+      author: fields[6] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AudioFileModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.coverImageBytes)
       ..writeByte(2)
-      ..write(obj.title)
+      ..write(obj.audioFilePath)
       ..writeByte(3)
+      ..write(obj.audioPosition)
+      ..writeByte(4)
+      ..write(obj.audioDuration)
+      ..writeByte(5)
+      ..write(obj.title)
+      ..writeByte(6)
       ..write(obj.author);
   }
 

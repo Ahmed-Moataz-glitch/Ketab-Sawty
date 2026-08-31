@@ -17,6 +17,7 @@ class CustomButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -29,7 +30,7 @@ class CustomButtonWidget extends StatelessWidget {
           side: BorderSide(
             color: backgroundColor == AppColors.primary
                 ? AppColors.transparent
-                : AppColors.primary,
+                : isLightTheme ? AppColors.primary : AppColors.white.withAlpha(200),
             width: 2.w,
           ),
         ),
@@ -40,7 +41,7 @@ class CustomButtonWidget extends StatelessWidget {
               style: TextStyle(
                 color: backgroundColor == AppColors.primary
                     ? AppColors.white
-                    : AppColors.primary,
+                    : isLightTheme ? AppColors.primary : AppColors.white.withAlpha(200),
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
               ),

@@ -3,18 +3,31 @@ import 'package:ketab_sawty/core/utils/app_constants.dart';
 import 'package:ketab_sawty/features/home/data/model/audio_file_model.dart';
 
 class HiveServices {
-  Future<void> addAudioFile(AudioFileModel audioFile) async {
-    final audioFileBox = Hive.box<AudioFileModel>(AppConstants.audioFileBox);
+  Future<void> addAudioFileToFavorite(AudioFileModel audioFile) async {
+    final audioFileBox = Hive.box<AudioFileModel>(
+      AppConstants.favoriteAudioFilesBox,
+    );
     await audioFileBox.put(audioFile.id, audioFile);
   }
 
-  List<AudioFileModel> getAllAudioFiles() {
-    final audioFileBox = Hive.box<AudioFileModel>(AppConstants.audioFileBox);
-    return audioFileBox.values.toList();
+  Future<void> deleteAudioFileFromFavorite(String id) async {
+    final audioFileBox = Hive.box<AudioFileModel>(
+      AppConstants.favoriteAudioFilesBox,
+    );
+    await audioFileBox.delete(id);
   }
 
-  Future<void> deleteAudioFile(String id) async {
-    final audioFileBox = Hive.box<AudioFileModel>(AppConstants.audioFileBox);
+  Future<void> saveAudioFile(AudioFileModel audioFile) async {
+    final audioFileBox = Hive.box<AudioFileModel>(
+      AppConstants.savedAudioFilesBox,
+    );
+    await audioFileBox.put(audioFile.id, audioFile);
+  }
+
+  Future<void> deleteAudioFileFromSaved(String id) async {
+    final audioFileBox = Hive.box<AudioFileModel>(
+      AppConstants.savedAudioFilesBox,
+    );
     await audioFileBox.delete(id);
   }
 }

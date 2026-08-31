@@ -19,14 +19,17 @@ abstract class AppDialogs {
                 const CircularProgressIndicator(color: AppColors.primary),
                 SizedBox(width: 16.w),
                 Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: isLightMode ? null : AppColors.yellow,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: isLightMode ? null : AppColors.yellow,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
                   ),
                 ),
               ],

@@ -14,6 +14,28 @@ final class PickPdfError extends HomeState {
   PickPdfError(this.errorMessage);
 }
 
+final class CaptureBookPagesSuccess extends HomeState {
+  final List<XFile> capturedPages;
+  CaptureBookPagesSuccess(this.capturedPages);
+}
+
+final class CaptureBookPagesError extends HomeState {
+  final String errorMessage;
+  CaptureBookPagesError(this.errorMessage);
+}
+
+final class CreatePdfFromCapturedImagesLoading extends HomeState {}
+
+final class CreatePdfFromCapturedImagesSuccess extends HomeState {
+  final PdfDetailsModel pdfDetails;
+  CreatePdfFromCapturedImagesSuccess(this.pdfDetails);
+}
+
+final class CreatePdfFromCapturedImagesError extends HomeState {
+  final String errorMessage;
+  CreatePdfFromCapturedImagesError(this.errorMessage);
+}
+
 final class ProcessingPdf extends HomeState {
   final int currrentPage;
   final int totalPages;
@@ -45,6 +67,8 @@ final class GetCurrentWordIndex extends HomeState {
   GetCurrentWordIndex(this.currentWordIndex);
 }
 
+final class CreatingAudioFile extends HomeState {}
+
 final class CreateAudioFileSuccess extends HomeState {
   final File audioFile;
   CreateAudioFileSuccess(this.audioFile);
@@ -53,4 +77,43 @@ final class CreateAudioFileSuccess extends HomeState {
 final class CreateAudioFileError extends HomeState {
   final String errorMessage;
   CreateAudioFileError(this.errorMessage);
+}
+
+
+final class AddAudioFileToFavoriteSuccess extends HomeState {
+  final AudioFileModel audioFile;
+  AddAudioFileToFavoriteSuccess(this.audioFile);
+}
+final class AddAudioFileToFavoriteError extends HomeState {
+  final String errorMessage;
+  AddAudioFileToFavoriteError(this.errorMessage);
+}
+
+final class DeleteAudioFileFromFavoriteError extends HomeState {
+  final String errorMessage;
+  DeleteAudioFileFromFavoriteError(this.errorMessage);
+}
+
+final class SaveAudioFileSuccess extends HomeState {
+  final AudioFileModel audioFile;
+  SaveAudioFileSuccess(this.audioFile);
+}
+final class SaveAudioFileError extends HomeState {
+  final String errorMessage;
+  SaveAudioFileError(this.errorMessage);
+}
+
+final class DeleteAudioFileFromSavedError extends HomeState {
+  final String errorMessage;
+  DeleteAudioFileFromSavedError(this.errorMessage);
+}
+
+final class IsAudioFileExistsSuccess extends HomeState {
+  final bool exists;
+  IsAudioFileExistsSuccess(this.exists);
+}
+
+final class IsAudioFileExistsError extends HomeState {
+  final String errorMessage;
+  IsAudioFileExistsError(this.errorMessage);
 }

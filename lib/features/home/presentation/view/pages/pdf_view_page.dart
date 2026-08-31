@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
+import 'package:ketab_sawty/core/utils/app_dialogs.dart';
+import 'package:ketab_sawty/core/utils/app_routes.dart';
 import 'package:ketab_sawty/core/utils/app_toast.dart';
 import 'package:ketab_sawty/features/home/data/model/pdf_details_model.dart';
 import 'package:ketab_sawty/features/home/presentation/view/widgets/custom_button_widget.dart';
 import 'package:ketab_sawty/features/home/presentation/view_model/home_cubit.dart';
+import 'package:ketab_sawty/generated/l10n.dart';
 import 'package:toastification/toastification.dart';
 
 class PdfViewPage extends StatefulWidget {
@@ -32,13 +35,18 @@ class _PdfViewPageState extends State<PdfViewPage> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await widget.homeCubit.createAudioFile(
-        text: widget.extractedText.join(' '),
-        fileName: widget.pdfDetailsModel.title,
-      );
-      // widget.homeCubit.getCurrentWordIndex();
-    });
+    _initializeAudioFile();
+  }
+
+  Future<void> _initializeAudioFile() async {
+    await widget.homeCubit.isAudioFileExists(widget.pdfDetailsModel.id)
+        ? audioFile = File(
+            '/storage/emulated/0/Music/${widget.pdfDetailsModel.id}.mp3',
+          )
+        : await widget.homeCubit.createAudioFile(
+            text: widget.extractedText.join(' '),
+            fileName: widget.pdfDetailsModel.title,
+          );
   }
 
   @override
@@ -52,7 +60,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'قراءة النص',
+          S.of(context).pdf_view_page_app_bar,
           style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -67,15 +75,15 @@ class _PdfViewPageState extends State<PdfViewPage> {
               if (state is SpeakArabicSuccess) {
                 AppToast.showToast(
                   context: context,
-                  title: 'تم الملف الصوتي',
-                  description: 'تم التكلم بنجاح',
+                  title: S.of(context).pdf_view_page_app_toast_title1,
+                  description: S.of(context).pdf_view_page_app_toast_description1,
                   type: ToastificationType.success,
                 );
               }
               if (state is SpeakArabicError) {
                 AppToast.showToast(
                   context: context,
-                  title: 'حدث خطأ',
+                  title: S.of(context).error,
                   description: state.errorMessage,
                   type: ToastificationType.error,
                 );
@@ -85,22 +93,37 @@ class _PdfViewPageState extends State<PdfViewPage> {
           BlocListener<HomeCubit, HomeState>(
             bloc: widget.homeCubit,
             listenWhen: (previous, current) =>
+                current is CreatingAudioFile ||
                 current is CreateAudioFileSuccess ||
                 current is CreateAudioFileError,
             listener: (context, state) {
+              if (state is CreatingAudioFile) {
+                AppDialogs.showLoadingDialog(
+                  context,
+                  title: S.of(context).pdf_view_page_loading,
+                );
+              }
               if (state is CreateAudioFileSuccess) {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // Close the loading dialog
                 audioFile = state.audioFile;
                 AppToast.showToast(
                   context: context,
-                  title: 'تم إنشاء الملف الصوتي',
-                  description: 'تم إنشاء الملف الصوتي بنجاح',
+                  title: S.of(context).pdf_view_page_app_toast_title2,
+                  description: S.of(context).pdf_view_page_app_toast_description2,
                   type: ToastificationType.success,
                 );
               }
               if (state is CreateAudioFileError) {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // Close the loading dialog
                 AppToast.showToast(
                   context: context,
-                  title: 'حدث خطأ',
+                  title: S.of(context).error,
                   description: state.errorMessage,
                   type: ToastificationType.error,
                 );
@@ -176,15 +199,6 @@ class _PdfViewPageState extends State<PdfViewPage> {
                               ],
                             ),
                           ),
-                          // Text(
-                          //   widget.extractedText[index],
-                          //   textAlign: TextAlign.justify,
-                          //   style: TextStyle(
-                          //     fontSize: 23.sp,
-                          //     fontWeight: FontWeight.w500,
-                          //     height: 1.5,
-                          //   ),
-                          // ),
                           SizedBox(height: 20.h),
                           CustomButtonWidget(
                             onPressed: () async {
@@ -192,25 +206,35 @@ class _PdfViewPageState extends State<PdfViewPage> {
                               await widget.homeCubit.speakArabic(
                                 widget.extractedText[index],
                               );
-                              // Navigator.of(context).pushNamed(
-                              //   AppRoutes.audioPlayer,
-                              //   arguments: {
-                              //     'pdfDetailsModel': widget.pdfDetailsModel,
-                              //     'audioFile': audioFile,
-                              //   },
-                              // );
                             },
-                            title: 'استمع للنص',
+                            title: S.of(context).pdf_view_page_title1,
                             icon: Icons.volume_up,
                           ),
                           SizedBox(height: 20.h),
+                          CustomButtonWidget(
+                            onPressed: () async {
+                              Navigator.of(context).pushNamed(
+                                AppRoutes.audioPlayer,
+                                arguments: {
+                                  'homeCubit': widget.homeCubit,
+                                  'pdfDetailsModel': widget.pdfDetailsModel,
+                                  'audioFile': audioFile,
+                                  'isFavorite': false,
+                                  'isSaved': false,
+                                },
+                              );
+                            },
+                            title: S.of(context).pdf_view_page_title2,
+                            icon: Icons.volume_up,
+                          ),
+                          SizedBox(height: 36.h),
                           Row(
                             spacing: 150.w,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
                                 child: CustomButtonWidget(
-                                  title: 'التالي',
+                                  title: S.of(context).upload_pdf_page_title7,
                                   onPressed:
                                       index < widget.extractedText.length - 1
                                       ? () {
@@ -226,7 +250,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                               ),
                               Expanded(
                                 child: CustomButtonWidget(
-                                  title: 'السابق',
+                                  title: S.of(context).pdf_view_page_title3,
                                   onPressed: index > 0
                                       ? () {
                                           _pageController.previousPage(

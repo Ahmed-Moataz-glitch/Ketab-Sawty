@@ -1,14 +1,19 @@
+import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
-import 'package:ketab_sawty/core/view/widgets/text_form_field_widget.dart';
-import 'package:ketab_sawty/core/view/widgets/validator.dart';
+import 'package:ketab_sawty/core/utils/app_localization.dart';
+import 'package:ketab_sawty/core/utils/get_it.dart';
+import 'package:ketab_sawty/features/home/presentation/view_model/home_cubit.dart';
 import 'package:ketab_sawty/features/my_library/presentation/view/widgets/all_tab_view_widget.dart';
 import 'package:ketab_sawty/features/my_library/presentation/view/widgets/completed_tab_view_widget.dart';
 import 'package:ketab_sawty/features/my_library/presentation/view/widgets/not_completed_tab_view_widget.dart';
+import 'package:ketab_sawty/features/my_library/presentation/view_model/my_library_cubit.dart';
+import 'package:ketab_sawty/generated/l10n.dart';
 
 class MyLibraryPage extends StatefulWidget {
-  const MyLibraryPage({super.key});
+  final HomeCubit homeCubit;
+  const MyLibraryPage({super.key, required this.homeCubit});
 
   @override
   State<MyLibraryPage> createState() => _MyLibraryPageState();
@@ -16,36 +21,44 @@ class MyLibraryPage extends StatefulWidget {
 
 class _MyLibraryPageState extends State<MyLibraryPage>
     with TickerProviderStateMixin {
-  late final TextEditingController searchController;
   late final TabController tabController;
-  bool isAllSelected = false;
-  bool isCompletedSelected = false;
-  bool isNotCompletedSelected = false;
+  late final MyLibraryCubit myLibraryCubit;
+  late List<String> categories;
 
   @override
   void initState() {
     super.initState();
-    searchController = TextEditingController();
     tabController = TabController(length: 3, vsync: this);
+    myLibraryCubit = getIt<MyLibraryCubit>();
   }
 
   @override
   void dispose() {
-    searchController.dispose();
     tabController.dispose();
+    myLibraryCubit.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final isArabic = AppLocalization.isArabic();
+    categories = [
+      S.of(context).my_library_page_tab3,
+      S.of(context).my_library_page_tab2,
+      S.of(context).my_library_page_tab1,
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'مكتبتي',
+          S.of(context).my_library_page_app_bar,
           style: TextStyle(
             fontSize: 26.sp,
-            color: AppColors.textPrimary,
+            color: isLightTheme
+                ? AppColors.textPrimary
+                : AppColors.white.withAlpha(220),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -57,130 +70,96 @@ class _MyLibraryPageState extends State<MyLibraryPage>
         padding: EdgeInsets.all(16.r),
         child: Column(
           children: [
-            TextFormFieldWidget(
-              hintText: 'ابحث عن كتاب',
-              controller: searchController,
-              validator: Validator.validateName,
-            ),
+            // TextFormFieldWidget(
+            //   hintText: S.of(context).my_library_page_title1,
+            //   controller: searchController,
+            //   validator: Validator.validateName,
+            // ),
             SizedBox(height: 32.h),
-            TabBar(
-              indicator: BoxDecoration(
-                color: AppColors.transparent,
-                borderRadius: BorderRadius.circular(24.r),
-              ),
-              tabAlignment: TabAlignment.fill,
-              tabs: [
-                Tab(
-                  // text: 'قيد الاستماع',
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isNotCompletedSelected = true;
-                        isCompletedSelected = false;
-                        isAllSelected = false;
-                      });
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(24.r),
-                        border: isNotCompletedSelected
-                            ? Border.all(color: AppColors.primary, width: 2.r)
-                            : null,
-                      ),
-                      child: Text(
-                        'قيد الاستماع',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Tab(
-                  // text: 'مكتمل',
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isNotCompletedSelected = false;
-                        isCompletedSelected = true;
-                        isAllSelected = false;
-                      });
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(24.r),
-                        border: isCompletedSelected
-                            ? Border.all(color: AppColors.primary, width: 2.r)
-                            : null,
-                      ),
-                      child: Text(
-                        'مكتمل',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Tab(
-                  // text: 'الكل',
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isNotCompletedSelected = false;
-                        isCompletedSelected = false;
-                        isAllSelected = true;
-                      });
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.border,
-                        borderRadius: BorderRadius.circular(24.r),
-                        border: isAllSelected
-                            ? Border.all(color: AppColors.primary, width: 2.r)
-                            : null,
-                      ),
-                      child: Text(
-                        'الكل',
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              // labelColor: AppColors.primary,
-              labelStyle: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-              ),
-              dividerColor: AppColors.transparent,
-              // indicatorColor: AppColors.primary,
-              // unselectedLabelColor: AppColors.grey,
-              controller: tabController,
-            ),
-            SizedBox(height: size.height * 0.06),
-            Expanded(
-              child: TabBarView(
-                controller: tabController,
+            DefaultTabController(
+              initialIndex: isArabic ? 2 : 0,
+              length: categories.length,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // MoviesTabViewWidget(homeCubit: homeCubit),
-                  // TvSeriesTabViewWidget(homeCubit: homeCubit),
-                  NotCompletedTabViewWidget(),
-                  CompletedTabViewWidget(),
-                  AllTabViewWidget(),
+                  ButtonsTabBar(
+                    physics: const NeverScrollableScrollPhysics(),
+                    backgroundColor: isLightTheme
+                        ? AppColors.primaryLight.withAlpha(50)
+                        : AppColors.primaryLight.withAlpha(20),
+                    unselectedBackgroundColor: AppColors.border,
+                    unselectedLabelStyle: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    labelStyle: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    radius: 16.r,
+                    borderColor: AppColors.primary,
+                    borderWidth: 1.5.r,
+                    contentPadding: isArabic
+                        ? EdgeInsets.symmetric(horizontal: 24.w)
+                        : EdgeInsets.symmetric(horizontal: 16.w),
+                    buttonMargin: isArabic
+                        ? EdgeInsets.symmetric(horizontal: 24.w)
+                        : EdgeInsets.symmetric(horizontal: 16.w),
+                    contentCenter: true,
+                    tabs: [
+                      Tab(text: categories[0]),
+                      Tab(text: categories[1]),
+                      Tab(text: categories[2]),
+                    ],
+                  ),
+                  // TabBar(
+                  //   isScrollable: true,
+                  //   indicatorColor: Colors.transparent,
+                  //   dividerColor: Colors.transparent,
+                  //   tabAlignment: TabAlignment.start,
+                  //   labelPadding: EdgeInsets.zero,
+                  //   onTap: (int index) {
+                  //     debugPrint('Selected tab: ${categories[index]}');
+                  //   },
+                  //   tabs: categories.map((category) {
+                  //     category == 'الكل'
+                  //         ? isAllSelected
+                  //         : category == 'المكتملة'
+                  //             ? isCompletedSelected
+                  //             : isNotCompletedSelected;
+                  //     return TabBarItemWidget(
+                  //       title: category,
+                  //       isSelected: category == 'الكل'
+                  //           ? isAllSelected
+                  //           : category == 'المكتملة'
+                  //               ? isCompletedSelected
+                  //               : isNotCompletedSelected,
+                  //     );
+                  //   }).toList(),
+                  // ),
+                  SizedBox(
+                    height: size.height * 0.6,
+                    child: TabBarView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        AllTabViewWidget(
+                          myLibraryCubit: myLibraryCubit,
+                          homeCubit: widget.homeCubit,
+                        ),
+                        CompletedTabViewWidget(
+                          myLibraryCubit: myLibraryCubit,
+                          homeCubit: widget.homeCubit,
+                        ),
+                        NotCompletedTabViewWidget(
+                          myLibraryCubit: myLibraryCubit,
+                          homeCubit: widget.homeCubit,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

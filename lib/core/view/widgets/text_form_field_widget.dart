@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
+import 'package:ketab_sawty/core/utils/app_localization.dart';
 
 class TextFormFieldWidget extends StatefulWidget {
   final TextInputType keyboardType;
@@ -31,8 +32,9 @@ class TextFormFieldWidget extends StatefulWidget {
 class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
   @override
   Widget build(BuildContext context) {
+    final isArabic = AppLocalization.isArabic();
     return TextFormField(
-      textDirection: TextDirection.rtl,
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w500,
@@ -42,7 +44,7 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
       cursorColor: AppColors.primary,
       obscureText: widget.obscureText,
       decoration: InputDecoration(
-        hintTextDirection: TextDirection.rtl,
+        hintTextDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
         hintText: widget.hintText,
         hintStyle: TextStyle(
           fontSize: 18,
@@ -78,7 +80,7 @@ class _TextFormFieldWidgetState extends State<TextFormFieldWidget> {
         enabledBorder: outlineInputBorder(
           color: AppColors.grey,
           radius: 10.r,
-          width: 1,
+          width: 1.2.r,
         ),
         focusedBorder: outlineInputBorder(
           color: AppColors.primary,

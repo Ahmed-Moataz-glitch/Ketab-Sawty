@@ -1,6 +1,7 @@
 import 'dart:io';
-
+import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ketab_sawty/features/home/data/api/home_api.dart';
 import 'package:ketab_sawty/features/home/data/model/pdf_details_model.dart';
 import 'package:ketab_sawty/features/home/domain/repo/data_source/home_data_source.dart';
@@ -19,12 +20,27 @@ class HomeDataSourceImpl extends HomeDataSource {
   // }
   
   @override
-  Future<void> speakArabic({required FlutterTts tts, required String text}) async {
-    return await homeApi.speakArabic(tts: tts, text: text);
+  Future<void> speakArabic({required FlutterTts tts, required String currentVoice, required String text}) async {
+    return await homeApi.speakArabic(tts: tts, currentVoice: currentVoice, text: text);
   }
 
   @override
   Future<File> createAudioFile({required FlutterTts tts, required String text, required String fileName}) async {
     return await homeApi.createAudioFile(tts: tts, text: text, fileName: fileName);
+  }
+  
+  @override
+  Future<bool> isAudioFileExists(String fileName) async {
+    return await homeApi.isAudioFileExists(fileName);
+  }
+
+  @override
+  Future<List<XFile>> captureBookPages(BuildContext context) async {
+    return await homeApi.captureBookPages(context);
+  }
+  
+  @override
+  Future<PdfDetailsModel> createPdfFromCapturedImages(List<XFile> images) async {
+    return await homeApi.createPdfFromCapturedImages(images);
   }
 }

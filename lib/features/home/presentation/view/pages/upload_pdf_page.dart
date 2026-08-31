@@ -5,10 +5,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_assets.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
 import 'package:ketab_sawty/core/utils/app_dialogs.dart';
+import 'package:ketab_sawty/core/utils/app_localization.dart';
 import 'package:ketab_sawty/core/utils/app_routes.dart';
 import 'package:ketab_sawty/features/home/presentation/view/widgets/book_information_widget.dart';
 import 'package:ketab_sawty/features/home/presentation/view/widgets/custom_button_widget.dart';
 import 'package:ketab_sawty/features/home/presentation/view_model/home_cubit.dart';
+import 'package:ketab_sawty/generated/l10n.dart';
 
 class UploadPdfPage extends StatelessWidget {
   final HomeCubit homeCubit;
@@ -17,12 +19,14 @@ class UploadPdfPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final isArabic = AppLocalization.isArabic();
     return Scaffold(
       appBar: AppBar(
         title: Directionality(
           textDirection: TextDirection.rtl,
           child: Text(
-            'رفع ملف PDF',
+            S.of(context).upload_pdf_page_app_bar,
             style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
           ),
         ),
@@ -83,12 +87,12 @@ class UploadPdfPage extends StatelessWidget {
                               child: TextButton(
                                 onPressed: () {},
                                 child: Text(
-                                  'اسحب ملف PDF هنا\n او اضغط للاختيار',
+                                  S.of(context).upload_pdf_page_title1,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 18.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.textSecondary,
+                                    color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -97,7 +101,7 @@ class UploadPdfPage extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: CustomButtonWidget(
-                                    title: 'اختيار ملف',
+                                    title: S.of(context).upload_pdf_page_title2,
                                     onPressed: () async {
                                       await homeCubit.pickPdf();
                                     },
@@ -111,13 +115,13 @@ class UploadPdfPage extends StatelessWidget {
                     ),
                     SizedBox(height: 48.h),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
                       child: Text(
-                        'معلومات الكتاب',
+                        S.of(context).upload_pdf_page_title3,
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: isLightTheme ? AppColors.textPrimary : AppColors.white.withAlpha(200),
                         ),
                       ),
                     ),
@@ -126,28 +130,31 @@ class UploadPdfPage extends StatelessWidget {
                       width: size.width,
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: isLightTheme ? AppColors.white : AppColors.dark.withAlpha(200),
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.border, width: 1.w),
+                        border: Border.all(color: isLightTheme ? AppColors.border : AppColors.textSecondary, width: 1.r),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         spacing: 8.h,
                         children: [
                           BookInformationWidget(
-                            title: 'اسم الكتاب',
+                            title: S.of(context).upload_pdf_page_title4,
                             value: pdfDetails.title,
                           ),
                           SizedBox(height: 4.h),
                           BookInformationWidget(
-                            title: 'المؤلف',
-                            value: pdfDetails.author ?? 'غير معروف',
+                            title: S.of(context).uplaod_pdf_page_title5,
+                            value: pdfDetails.author ?? S.of(context).unknown,
                           ),
                           SizedBox(height: 4.h),
                           BookInformationWidget(
-                            title: 'عدد الصفحات',
-                            value: '${pdfDetails.pageCount} صفحة',
+                            title: S.of(context).uplaod_pdf_page_title6,
+                            value: isArabic
+                                ? '${pdfDetails.pageCount} ${(pdfDetails.pageCount! >= 10 || pdfDetails.pageCount == 1) ? S.of(context).page : S.of(context).pages}'
+                                : '${pdfDetails.pageCount} ${pdfDetails.pageCount == 1 ? S.of(context).page : S.of(context).pages}',
                           ),
+                          SizedBox(height: 8.h),
                         ],
                       ),
                     ),
@@ -156,9 +163,9 @@ class UploadPdfPage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: CustomButtonWidget(
-                            title: 'التالي', 
+                            title: S.of(context).upload_pdf_page_title7,
                             onPressed: () {
-                              Navigator.of(context).pushNamed(
+                              Navigator.of(context).pushReplacementNamed(
                                 AppRoutes.processing,
                                 arguments: {
                                   'homeCubit': homeCubit,
@@ -199,19 +206,19 @@ class UploadPdfPage extends StatelessWidget {
                             Image.asset(
                               AppAssets.pdfFileImage,
                               height: size.height * 0.15,
-                              color: AppColors.primary,
+                              color: isLightTheme ? AppColors.primary : AppColors.grey,
                             ),
                             Directionality(
                               textDirection: TextDirection.rtl,
                               child: TextButton(
                                 onPressed: () {},
                                 child: Text(
-                                  'اسحب ملف PDF هنا\n او اضغط للاختيار',
+                                  S.of(context).upload_pdf_page_title1,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 18.sp,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.textSecondary,
+                                    color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -220,7 +227,7 @@ class UploadPdfPage extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: CustomButtonWidget(
-                                    title: 'اختيار ملف',
+                                    title: S.of(context).upload_pdf_page_title2,
                                     onPressed: () async {
                                       await homeCubit.pickPdf();
                                     },
@@ -234,13 +241,13 @@ class UploadPdfPage extends StatelessWidget {
                     ),
                     SizedBox(height: 48.h),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: isArabic ? Alignment.centerRight : Alignment.centerLeft,
                       child: Text(
-                        'معلومات الكتاب',
+                        S.of(context).upload_pdf_page_title3,
                         style: TextStyle(
                           fontSize: 20.sp,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: isLightTheme ? AppColors.textPrimary : AppColors.white.withAlpha(200),
                         ),
                       ),
                     ),
@@ -249,28 +256,29 @@ class UploadPdfPage extends StatelessWidget {
                       width: size.width,
                       padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: isLightTheme ? AppColors.white : AppColors.dark.withAlpha(200),
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: AppColors.border, width: 1.w),
+                        border: Border.all(color: isLightTheme ? AppColors.border : AppColors.textSecondary, width: 1.r),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         spacing: 8.h,
                         children: [
                           BookInformationWidget(
-                            title: 'اسم الكتاب',
-                            value: 'أساور سيكتوريا',
+                            title: S.of(context).upload_pdf_page_title4,
+                            value: isArabic ? 'أساور سيكتوريا' : 'Asawir Sectoria',
                           ),
                           SizedBox(height: 4.h),
                           BookInformationWidget(
-                            title: 'المؤلف',
-                            value: 'حمادة الكاشف',
+                            title: S.of(context).uplaod_pdf_page_title5,
+                            value: isArabic ? 'حمادة الكاشف' : 'Hamada Al-Kashif',
                           ),
                           SizedBox(height: 4.h),
                           BookInformationWidget(
-                            title: 'عدد الصفحات',
-                            value: '223 صفحة',
+                            title: S.of(context).uplaod_pdf_page_title6,
+                            value: isArabic ? '223 صفحة' : '223 Pages',
                           ),
+                          SizedBox(height: 8.h),
                         ],
                       ),
                     ),
@@ -279,7 +287,7 @@ class UploadPdfPage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: CustomButtonWidget(
-                            title: 'التالي',
+                            title: S.of(context).upload_pdf_page_title7,
                             onPressed: null,
                           ),
                         ),

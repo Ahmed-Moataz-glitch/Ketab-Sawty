@@ -2,70 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_assets.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
+import 'package:ketab_sawty/core/utils/app_localization.dart';
 import 'package:ketab_sawty/core/utils/app_routes.dart';
-import 'package:ketab_sawty/features/home/data/api/home_api.dart';
-import 'package:ketab_sawty/features/home/data/repo/data_source/home_data_source_impl.dart';
-import 'package:ketab_sawty/features/home/data/repo/repo/home_repo_impl.dart';
-import 'package:ketab_sawty/features/home/domain/repo/data_source/home_data_source.dart';
-import 'package:ketab_sawty/features/home/domain/repo/repo/home_repo.dart';
-import 'package:ketab_sawty/features/home/domain/use_cases/create_audio_file_use_case.dart';
-import 'package:ketab_sawty/features/home/domain/use_cases/pick_pdf_use_case.dart';
-import 'package:ketab_sawty/features/home/domain/use_cases/speak_arabic_use_case.dart';
 import 'package:ketab_sawty/features/home/presentation/view/widgets/custom_button_widget.dart';
 import 'package:ketab_sawty/features/home/presentation/view_model/home_cubit.dart';
+import 'package:ketab_sawty/generated/l10n.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final HomeCubit homeCubit;
+  const HomePage({super.key, required this.homeCubit});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late final HomeCubit homeCubit;
-
-  @override
-  void initState() {
-    super.initState();
-    HomeApi homeApi = HomeApi();
-    HomeDataSource homeDataSource = HomeDataSourceImpl(homeApi);
-    HomeRepo homeRepo = HomeRepoImpl(homeDataSource);
-    PickPdfUseCase pickPdfUseCase = PickPdfUseCase(homeRepo);
-    // ProcessPdfUseCase processPdfUseCase = ProcessPdfUseCase(homeRepo);
-    SpeakArabicUseCase speakArabicUseCase = SpeakArabicUseCase(homeRepo);
-    CreateAudioFileUseCase createAudioFileUseCase = CreateAudioFileUseCase(homeRepo);
-    homeCubit = HomeCubit(
-      pickPdfUseCase: pickPdfUseCase,
-      // processPdfUseCase: processPdfUseCase,
-      speakArabicUseCase: speakArabicUseCase,
-      createAudioFileUseCase: createAudioFileUseCase,
-    );
-  }
-
-  @override
-  void dispose() {
-    homeCubit.close();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final isArabic = AppLocalization.isArabic();
     return Scaffold(
       appBar: AppBar(
-        leading: Icon(
-          Icons.workspace_premium,
-          color: AppColors.yellow,
-          size: 42.sp,
-        ),
+        leading: isArabic
+            ? Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: Icon(
+                  Icons.workspace_premium,
+                  color: AppColors.yellow,
+                  size: 42.sp,
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.only(left: 16.w),
+                child: CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: isLightTheme ? AppColors.grey.withAlpha(50) : AppColors.white.withAlpha(200),
+                  child: Icon(Icons.person, size: 32.sp, color: isLightTheme ? AppColors.textSecondary : AppColors.textSecondary),
+                ),
+              ),
         actions: [
-          CircleAvatar(
-            radius: 20.r,
-            backgroundColor: AppColors.grey.withAlpha(50),
-            child: Icon(Icons.person, size: 32.sp),
-          ),
+          isArabic
+              ? Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: CircleAvatar(
+                    radius: 20.r,
+                    backgroundColor: isLightTheme ? AppColors.grey.withAlpha(50) : AppColors.grey.withAlpha(200),
+                    child: Icon(Icons.person, size: 32.sp, color: isLightTheme ? AppColors.textSecondary : AppColors.textPrimary),
+                  ),
+              )
+              : Padding(
+                padding: EdgeInsets.only(right: 16.w),
+                child: Icon(
+                    Icons.workspace_premium,
+                    color: AppColors.yellow,
+                    size: 42.sp,
+                  ),
+              ),
         ],
-        actionsPadding: EdgeInsets.only(right: 16.w),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.r),
@@ -77,35 +72,35 @@ class _HomePageState extends State<HomePage> {
               spacing: 6.w,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.waving_hand, color: AppColors.yellow, size: 24.sp),
                 Text(
-                  'مرحبا بك',
+                  S.of(context).home_page_title1,
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
                 ),
+                Icon(Icons.waving_hand, color: AppColors.yellow, size: 24.sp),
               ],
             ),
             SizedBox(height: 16.h),
             Text(
-              'حوّل كتبك إلى\n كتب صوتية',
+              S.of(context).home_page_title2,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 36.sp,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: isLightTheme ? AppColors.primary : AppColors.grey,
               ),
             ),
             SizedBox(height: 16.h),
             Text(
-              'ارفع كتاباً او صوّر صفحاته\n واستمع إليه في أي وقت',
+              S.of(context).home_page_title3,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
+                color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
               ),
             ),
             SizedBox(height: 36.h),
@@ -114,38 +109,40 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Icon(
                   Icons.multitrack_audio,
-                  color: AppColors.primary.withAlpha(80),
+                  color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
                   size: 64.sp,
                 ),
                 Image.asset(
                   AppAssets.audioBookImage,
                   height: size.height * 0.15,
-                  color: AppColors.primary,
+                  color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
                 ),
                 Icon(
                   Icons.multitrack_audio,
-                  color: AppColors.primary.withAlpha(80),
+                  color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
                   size: 64.sp,
                 ),
               ],
             ),
             SizedBox(height: 36.h),
             CustomButtonWidget(
-              title: 'رفع ملف PDF',
+              title: S.of(context).home_page_title4,
               icon: Icons.upload_file,
               onPressed: () {
                 Navigator.of(
                   context,
-                ).pushNamed(AppRoutes.uploadPdf, arguments: homeCubit);
+                ).pushNamed(AppRoutes.uploadPdf, arguments: widget.homeCubit);
               },
             ),
             SizedBox(height: 16.h),
             CustomButtonWidget(
               backgroundColor: AppColors.white,
-              title: 'تصوير صفحات كتاب',
+              title: S.of(context).home_page_title5,
               icon: Icons.camera_alt_rounded,
               onPressed: () {
-                // Handle button press
+                Navigator.of(
+                  context,
+                ).pushNamed(AppRoutes.captureBookPages, arguments: widget.homeCubit);
               },
             ),
           ],
