@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="assets/icons/launcher_icon.png" alt="Ketab Sawty Logo" width="120"/>
+  <img src="https://github.com/Ahmed-Moataz-glitch/Ketab-Sawty/blob/development/assets/icons/splash_ios_android_12.png" alt="Ketab Sawty Logo" width="200"/>
 
   # 🎧 كتاب صوتي | Ketab Sawty
 
