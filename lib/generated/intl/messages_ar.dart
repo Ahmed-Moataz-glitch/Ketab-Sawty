@@ -98,11 +98,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "settings_page_title1":
             MessageLookupByLibrary.simpleMessage("الصوت المستخدم"),
         "settings_page_title1_value1":
-            MessageLookupByLibrary.simpleMessage("صوت 1"),
+            MessageLookupByLibrary.simpleMessage("قارئ 1 (مصري)"),
         "settings_page_title1_value2":
-            MessageLookupByLibrary.simpleMessage("صوت 2"),
+            MessageLookupByLibrary.simpleMessage("قارئ 2 (سعودي)"),
         "settings_page_title1_value3":
-            MessageLookupByLibrary.simpleMessage("صوت 3"),
+            MessageLookupByLibrary.simpleMessage("قارئ 3 (فصيح)"),
         "settings_page_title2": MessageLookupByLibrary.simpleMessage("المظهر"),
         "settings_page_title2_value1":
             MessageLookupByLibrary.simpleMessage("النظام"),

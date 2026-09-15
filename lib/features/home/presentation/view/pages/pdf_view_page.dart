@@ -10,6 +10,8 @@ import 'package:ketab_sawty/features/home/data/model/pdf_details_model.dart';
 import 'package:ketab_sawty/features/home/presentation/view/widgets/custom_button_widget.dart';
 import 'package:ketab_sawty/features/home/presentation/view_model/home_cubit.dart';
 import 'package:ketab_sawty/generated/l10n.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:ketab_sawty/core/view_model/voice_cubit/voice_cubit.dart';
 import 'package:toastification/toastification.dart';
 
 class PdfViewPage extends StatefulWidget {
@@ -39,14 +41,26 @@ class _PdfViewPageState extends State<PdfViewPage> {
   }
 
   Future<void> _initializeAudioFile() async {
-    await widget.homeCubit.isAudioFileExists(widget.pdfDetailsModel.id)
-        ? audioFile = File(
-            '/storage/emulated/0/Music/${widget.pdfDetailsModel.id}.mp3',
-          )
-        : await widget.homeCubit.createAudioFile(
-            text: widget.extractedText.join(' '),
-            fileName: widget.pdfDetailsModel.title,
-          );
+    final exists = await widget.homeCubit.isAudioFileExists(widget.pdfDetailsModel.id);
+    if (exists) {
+      final dir = await getApplicationDocumentsDirectory();
+      final wavFile = File('${dir.path}/${widget.pdfDetailsModel.id}.wav');
+      final mp3File = File('${dir.path}/${widget.pdfDetailsModel.id}.mp3');
+      final legacyFile = File('/storage/emulated/0/Music/${widget.pdfDetailsModel.id}.mp3');
+      if (await wavFile.exists()) {
+        audioFile = wavFile;
+      } else if (await mp3File.exists()) {
+        audioFile = mp3File;
+      } else if (await legacyFile.exists()) {
+        audioFile = legacyFile;
+      }
+      if (mounted) setState(() {});
+    } else {
+      await widget.homeCubit.createAudioFile(
+        text: widget.extractedText.join(' '),
+        fileName: widget.pdfDetailsModel.id,
+      );
+    }
   }
 
   @override
@@ -202,6 +216,10 @@ class _PdfViewPageState extends State<PdfViewPage> {
                           SizedBox(height: 20.h),
                           CustomButtonWidget(
                             onPressed: () async {
+                              try {
+                                final voice = VoiceCubit.get(context).getVoice();
+                                widget.homeCubit.updateVoice(voice);
+                              } catch (_) {}
                               widget.homeCubit.getCurrentWordIndex();
                               await widget.homeCubit.speakArabic(
                                 widget.extractedText[index],
@@ -213,12 +231,26 @@ class _PdfViewPageState extends State<PdfViewPage> {
                           SizedBox(height: 20.h),
                           CustomButtonWidget(
                             onPressed: () async {
+                              final exists = audioFile != null && audioFile!.existsSync();
+                              if (!exists) {
+                                if (context.mounted) {
+                                  AppToast.showToast(
+                                    context: context,
+                                    title: S.of(context).processing_page_app_bar,
+                                    description: S.of(context).pdf_view_page_loading,
+                                    type: ToastificationType.info,
+                                  );
+                                }
+                                await _initializeAudioFile();
+                                return;
+                              }
+                              if (!context.mounted) return;
                               Navigator.of(context).pushNamed(
                                 AppRoutes.audioPlayer,
                                 arguments: {
                                   'homeCubit': widget.homeCubit,
                                   'pdfDetailsModel': widget.pdfDetailsModel,
-                                  'audioFile': audioFile,
+                                  'audioFile': audioFile!,
                                   'isFavorite': false,
                                   'isSaved': false,
                                 },

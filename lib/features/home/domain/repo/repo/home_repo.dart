@@ -17,6 +17,7 @@ abstract class HomeRepo {
     required FlutterTts tts,
     required String text,
     required String fileName,
+    String? currentVoice,
   });
 
   Future<bool> isAudioFileExists(String fileName);

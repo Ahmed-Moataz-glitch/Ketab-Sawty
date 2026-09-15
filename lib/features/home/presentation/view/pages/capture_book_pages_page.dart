@@ -236,12 +236,14 @@ class _CaptureBookPagesPageState extends State<CaptureBookPagesPage> {
                           Expanded(
                             child: CustomButtonWidget(
                               title: S.of(context).upload_pdf_page_title7,
-                              onPressed: () async {
-                                await widget.homeCubit
-                                    .creataPdfFromCapturedImages(
-                                      state.capturedPages,
-                                    );
-                              },
+                              onPressed: state.capturedPages.isNotEmpty
+                                  ? () async {
+                                      await widget.homeCubit
+                                          .creataPdfFromCapturedImages(
+                                            state.capturedPages,
+                                          );
+                                    }
+                                  : null,
                             ),
                           ),
                         ],

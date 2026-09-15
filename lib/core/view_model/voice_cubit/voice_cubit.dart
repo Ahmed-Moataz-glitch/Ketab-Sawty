@@ -23,13 +23,17 @@ class VoiceCubit extends Cubit<VoiceState> {
   }
 
   String getVoice() {
-    switch (currentvoice) {
+    return voiceIdFromMode(currentvoice);
+  }
+
+  static String voiceIdFromMode(VoiceModeState mode) {
+    switch (mode) {
       case VoiceModeState.voice1:
         return 'ar-xa-x-arz-local';
       case VoiceModeState.voice2:
         return 'ar-xa-x-ard-local';
       case VoiceModeState.voice3:
-        return 'ar-xa-x-arc-network';
+        return 'ar-xa-x-ara-local';
     }
   }
 

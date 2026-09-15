@@ -550,30 +550,30 @@ class S {
     );
   }
 
-  /// `Voice 1`
+  /// `Reader 1 (Egyptian)`
   String get settings_page_title1_value1 {
     return Intl.message(
-      'Voice 1',
+      'Reader 1 (Egyptian)',
       name: 'settings_page_title1_value1',
       desc: '',
       args: [],
     );
   }
 
-  /// `Voice 2`
+  /// `Reader 2 (Saudi)`
   String get settings_page_title1_value2 {
     return Intl.message(
-      'Voice 2',
+      'Reader 2 (Saudi)',
       name: 'settings_page_title1_value2',
       desc: '',
       args: [],
     );
   }
 
-  /// `Voice 3`
+  /// `Reader 3 (Standard Arabic)`
   String get settings_page_title1_value3 {
     return Intl.message(
-      'Voice 3',
+      'Reader 3 (Standard Arabic)',
       name: 'settings_page_title1_value3',
       desc: '',
       args: [],

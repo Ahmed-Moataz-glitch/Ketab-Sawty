@@ -323,15 +323,15 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                       size: 45.sp,
                       color: AppColors.white,
                     ),
-                    iconSize: 40.sp,
                     onPressed: () {
                       final currentPosition = audioPlayer.position;
+                      final duration = audioPlayer.duration ?? Duration.zero;
                       final newPosition =
-                          currentPosition + Duration(seconds: 10);
+                          currentPosition + const Duration(seconds: 10);
                       audioPlayer.seek(
-                        newPosition <= audioPlayer.duration!
+                        newPosition <= duration
                             ? newPosition
-                            : audioPlayer.duration ?? Duration.zero,
+                            : duration,
                       );
                     },
                   ),

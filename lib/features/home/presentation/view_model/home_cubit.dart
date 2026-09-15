@@ -20,6 +20,8 @@ import 'package:ketab_sawty/features/home/domain/use_cases/save_audio_file_use_c
 import 'package:ketab_sawty/features/home/domain/use_cases/speak_arabic_use_case.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:ketab_sawty/core/utils/shared_preferences.dart';
+import 'package:ketab_sawty/core/view_model/voice_cubit/voice_cubit.dart';
 
 part 'home_state.dart';
 
@@ -50,7 +52,22 @@ class HomeCubit extends Cubit<HomeState> {
     required this.saveAudioFileUseCase,
     required this.deleteAudioFileFromSavedUseCase,
     required this.isAudioFileExistsUseCase,
-  }) : super(HomeInitial());
+  }) : super(HomeInitial()) {
+    initVoice();
+  }
+
+  Future<void> initVoice() async {
+    try {
+      final voiceMode = await FlutterSharedPreferences.instance.getVoice();
+      currentVoice = VoiceCubit.voiceIdFromMode(voiceMode);
+    } catch (_) {
+      currentVoice = 'ar-xa-x-arz-local';
+    }
+  }
+
+  void updateVoice(String voice) {
+    currentVoice = voice;
+  }
 
   Future<void> pickPdf() async {
     try {
@@ -190,6 +207,9 @@ class HomeCubit extends Cubit<HomeState> {
     String text,
   ) async {
     try {
+      if (currentVoice.isEmpty) {
+        await initVoice();
+      }
       await speakArabicUseCase.call(tts: tts, currentVoice: currentVoice, text: text);
       emit(SpeakArabicSuccess(text));
     } catch (e) {
@@ -219,10 +239,14 @@ class HomeCubit extends Cubit<HomeState> {
   }) async {
     emit(CreatingAudioFile());
     try {
+      if (currentVoice.isEmpty) {
+        await initVoice();
+      }
       final audioFile = await createAudioFileUseCase.call(
         tts: tts,
         text: text,
         fileName: fileName,
+        currentVoice: currentVoice,
       );
       emit(CreateAudioFileSuccess(audioFile));
     } catch (e) {

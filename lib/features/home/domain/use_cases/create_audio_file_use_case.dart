@@ -6,7 +6,17 @@ class CreateAudioFileUseCase {
   final HomeRepo homeRepo;
   CreateAudioFileUseCase(this.homeRepo);
 
-  Future<File> call({required FlutterTts tts, required String text, required String fileName}) {
-    return homeRepo.createAudioFile(tts: tts, text: text, fileName: fileName);
+  Future<File> call({
+    required FlutterTts tts,
+    required String text,
+    required String fileName,
+    String? currentVoice,
+  }) {
+    return homeRepo.createAudioFile(
+      tts: tts,
+      text: text,
+      fileName: fileName,
+      currentVoice: currentVoice,
+    );
   }
 }

@@ -20,8 +20,18 @@ class HomeRepoImpl extends HomeRepo {
   }
 
   @override
-  Future<File> createAudioFile({required FlutterTts tts, required String text, required String fileName}) async {
-    return await homeDataSource.createAudioFile(tts: tts, text: text, fileName: fileName);
+  Future<File> createAudioFile({
+    required FlutterTts tts,
+    required String text,
+    required String fileName,
+    String? currentVoice,
+  }) async {
+    return await homeDataSource.createAudioFile(
+      tts: tts,
+      text: text,
+      fileName: fileName,
+      currentVoice: currentVoice,
+    );
   }
   
   @override

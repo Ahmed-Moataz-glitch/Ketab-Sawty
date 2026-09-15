@@ -71,7 +71,7 @@ Widget setUpPlayer({required AudioPlayer audioPlayer, required Duration audioPos
 }
 
 Widget setUpSpeedControl(AudioPlayer audioPlayer) {
-  return StreamBuilder(
+  return StreamBuilder<double>(
     stream: audioPlayer.speedStream,
     builder: (context, snapshot) {
       final speed = snapshot.data ?? 1.0;
@@ -82,20 +82,25 @@ Widget setUpSpeedControl(AudioPlayer audioPlayer) {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: Text('اختر سرعة التشغيل'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var s in [0.5, 1.0, 1.5, 2.0])
-                      RadioGroup(
-                        groupValue: speed,
-                        onChanged: (value) {
-                          audioPlayer.setSpeed(value!);
-                          Navigator.of(context).pop();
-                        },
-                        child: RadioListTile(value: s, title: Text('${s}x')),
-                      ),
-                  ],
+                title: const Text('اختر سرعة التشغيل'),
+                content: RadioGroup<double>(
+                  groupValue: speed,
+                  onChanged: (value) {
+                    if (value != null) {
+                      audioPlayer.setSpeed(value);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var s in [0.5, 1.0, 1.5, 2.0])
+                        RadioListTile<double>(
+                          value: s,
+                          title: Text('${s}x'),
+                        ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -107,7 +112,7 @@ Widget setUpSpeedControl(AudioPlayer audioPlayer) {
 }
 
 Widget setUpVolumeControl(AudioPlayer audioPlayer) {
-  return StreamBuilder(
+  return StreamBuilder<double>(
     stream: audioPlayer.volumeStream,
     builder: (context, snapshot) {
       final volume = snapshot.data ?? 1.0;
@@ -122,23 +127,25 @@ Widget setUpVolumeControl(AudioPlayer audioPlayer) {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: Text('اختر مستوى الصوت'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var s in [0.0, 0.25, 0.5, 0.75, 1.0])
-                      RadioGroup(
-                        groupValue: volume,
-                        onChanged: (value) {
-                          audioPlayer.setVolume(value!);
-                          Navigator.of(context).pop();
-                        },
-                        child: RadioListTile(
+                title: const Text('اختر مستوى الصوت'),
+                content: RadioGroup<double>(
+                  groupValue: volume,
+                  onChanged: (value) {
+                    if (value != null) {
+                      audioPlayer.setVolume(value);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var s in [0.0, 0.25, 0.5, 0.75, 1.0])
+                        RadioListTile<double>(
                           value: s,
                           title: Text('${(s * 100).round()}%'),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -158,19 +165,23 @@ Widget setUpProgressBar({
     builder: (context, snapshot) {
       final position = snapshot.data ?? audioPosition;
       final duration = audioPlayer.duration ?? Duration.zero;
+      final maxVal =
+          duration.inSeconds > 0 ? duration.inSeconds.toDouble() : 1.0;
+      final currentVal = duration.inSeconds > 0
+          ? position.inSeconds.toDouble().clamp(0.0, maxVal)
+          : 0.0;
       return Slider(
         min: 0.0,
-        max: duration.inSeconds.toDouble(),
-        value: position.inSeconds.toDouble().clamp(
-          0.0,
-          duration.inSeconds.toDouble(),
-        ),
+        max: maxVal,
+        value: currentVal,
         activeColor: AppColors.white,
         inactiveColor: AppColors.grey.withAlpha(80),
         padding: EdgeInsets.symmetric(horizontal: 28.r),
-        onChanged: (value) {
-          audioPlayer.seek(Duration(seconds: value.toInt()));
-        },
+        onChanged: duration.inSeconds > 0
+            ? (value) {
+                audioPlayer.seek(Duration(seconds: value.toInt()));
+              }
+            : null,
       );
     },
   );

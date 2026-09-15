@@ -13,6 +13,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:pdf_combiner/models/merge_input.dart';
 import 'package:pdf_combiner/models/pdf_from_multiple_image_config.dart';
 import 'package:pdf_combiner/pdf_combiner.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import 'package:pdfx/pdfx.dart' as pdfx;
 
@@ -197,7 +198,8 @@ class HomeApi {
     List<XFile> images,
   ) async {
     final ts = DateTime.now().millisecondsSinceEpoch;
-    final outputPath = '/storage/emulated/0/Documents/$ts.pdf';
+    final dir = await getApplicationDocumentsDirectory();
+    final outputPath = '${dir.path}/$ts.pdf';
 
     final responsePath = await PdfCombiner.createPDFFromMultipleImages(
       inputs: images.map((e) => MergeInput.path(e.path)).toList(),
@@ -248,19 +250,20 @@ class HomeApi {
     required String currentVoice,
     required String text,
   }) async {
-    await tts.setVoice({
-      'name': currentVoice,
-      'locale': 'ar',
-    });
-    await tts.setLanguage('ar'); // or 'ar-SA', 'ar-EG', etc.
+    await tts.setLanguage('ar'); // always guarantee Arabic locale
+    if (currentVoice.isNotEmpty) {
+      try {
+        await tts.setVoice({
+          'name': currentVoice,
+          'locale': 'ar',
+        });
+      } catch (e) {
+        debugPrint('Failed to set specific voice $currentVoice: $e');
+      }
+    }
     await tts.setSpeechRate(0.45); // 0.0 - 1.0 (varies by platform)
     await tts.setPitch(1.0);
-    await tts.getVoices.then((data) {
-      List<Map> voices = List<Map>.from(data);
-      voices = voices.where((voice) => voice['name'].contains('ar')).toList();
-      // debugPrint('Available Arabic voices: $voices');
-      debugPrint('Using voice: $currentVoice');
-    });
+    debugPrint('Using voice: $currentVoice');
     await tts.speak(text);
   }
 
@@ -268,30 +271,57 @@ class HomeApi {
     required FlutterTts tts,
     required String text,
     required String fileName,
+    String? currentVoice,
   }) async {
     await tts.setLanguage('ar');
-    // await tts.setVoice({'name': 'ar-xa-x-ard-local', 'locale': 'ar'});
+    if (currentVoice != null && currentVoice.isNotEmpty) {
+      try {
+        await tts.setVoice({'name': currentVoice, 'locale': 'ar'});
+      } catch (e) {
+        debugPrint('Failed to set voice in createAudioFile: $e');
+      }
+    }
     await tts.awaitSynthCompletion(true);
 
+    final dir = await getApplicationDocumentsDirectory();
     final safe = fileName
         .replaceAll('.pdf', '')
         .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_');
 
-    final outName = '$safe.mp3'; // ONLY name, no path
-    final result = await tts.synthesizeToFile(text, outName);
+    final wavPath = '${dir.path}/$safe.wav';
+    final wavFile = File(wavPath);
+    await tts.synthesizeToFile(text, wavPath, true);
 
-    final fullPath = '/storage/emulated/0/Music/$outName';
-    final file = File(fullPath);
-
-    if (!await file.exists()) {
-      throw Exception('synthesizeToFile failed. result=$result path=$fullPath');
+    if (await wavFile.exists()) {
+      return wavFile;
     }
-    return file;
+
+    // Check if synthesized with relative name or .mp3
+    final altWav = File('${dir.path}/$safe.wav');
+    if (await altWav.exists()) return altWav;
+    final altMp3 = File('${dir.path}/$safe.mp3');
+    if (await altMp3.exists()) return altMp3;
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    return wavFile;
   }
 
   Future<bool> isAudioFileExists(String fileName) async {
-    await onAudioQuery.permissionsRequest();
-    List<String> songs = await onAudioQuery.queryAllPath();
-    return songs.any((song) => song.contains(fileName));
+    final dir = await getApplicationDocumentsDirectory();
+    final safe = fileName
+        .replaceAll('.pdf', '')
+        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_');
+
+    final wavFile = File('${dir.path}/$safe.wav');
+    if (await wavFile.exists()) return true;
+
+    final mp3File = File('${dir.path}/$safe.mp3');
+    if (await mp3File.exists()) return true;
+
+    // Check legacy storage path if previously generated
+    final legacyFile = File('/storage/emulated/0/Music/$safe.mp3');
+    if (await legacyFile.exists()) return true;
+
+    return false;
   }
 }

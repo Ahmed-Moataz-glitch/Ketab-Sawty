@@ -102,11 +102,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "settings_page_title1":
             MessageLookupByLibrary.simpleMessage("Voice used"),
         "settings_page_title1_value1":
-            MessageLookupByLibrary.simpleMessage("Voice 1"),
+            MessageLookupByLibrary.simpleMessage("Reader 1 (Egyptian)"),
         "settings_page_title1_value2":
-            MessageLookupByLibrary.simpleMessage("Voice 2"),
+            MessageLookupByLibrary.simpleMessage("Reader 2 (Saudi)"),
         "settings_page_title1_value3":
-            MessageLookupByLibrary.simpleMessage("Voice 3"),
+            MessageLookupByLibrary.simpleMessage("Reader 3 (Standard Arabic)"),
         "settings_page_title2": MessageLookupByLibrary.simpleMessage("Theme"),
         "settings_page_title2_value1":
             MessageLookupByLibrary.simpleMessage("System"),

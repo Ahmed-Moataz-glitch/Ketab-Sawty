@@ -72,6 +72,9 @@ class _NotCompletedTabViewWidgetState extends State<NotCompletedTabViewWidget> {
                           SizedBox(height: 16.h),
                       itemBuilder: (context, index) {
                         final audioFile = notCompletedAudioFiles[index];
+                        final progress = audioFile.audioDuration > 0
+                            ? (audioFile.audioPosition / audioFile.audioDuration).clamp(0.0, 1.0)
+                            : 0.0;
                         return InkWell(
                           splashFactory: NoSplash.splashFactory,
                           onTap: () {
@@ -135,7 +138,7 @@ class _NotCompletedTabViewWidgetState extends State<NotCompletedTabViewWidget> {
                                         Row(
                                           children: [
                                             Text(
-                                              '${(audioFile.audioPosition / audioFile.audioDuration * 100).toStringAsFixed(0)}%',
+                                              '${(progress * 100).toStringAsFixed(0)}%',
                                               style: TextStyle(
                                                 fontSize: 17.sp,
                                                 fontWeight: FontWeight.w600,
@@ -149,9 +152,7 @@ class _NotCompletedTabViewWidgetState extends State<NotCompletedTabViewWidget> {
                                                 borderRadius:
                                                     BorderRadius.circular(8.r),
                                                 child: LinearProgressIndicator(
-                                                  value:
-                                                      audioFile.audioPosition /
-                                                      audioFile.audioDuration,
+                                                  value: progress,
                                                   color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
                                                   minHeight: 6.h,
                                                   backgroundColor: AppColors
@@ -195,9 +196,7 @@ class _NotCompletedTabViewWidgetState extends State<NotCompletedTabViewWidget> {
                                                 borderRadius:
                                                     BorderRadius.circular(8.r),
                                                 child: LinearProgressIndicator(
-                                                  value:
-                                                      audioFile.audioPosition /
-                                                      audioFile.audioDuration,
+                                                  value: progress,
                                                   color: AppColors.primary,
                                                   minHeight: 6.h,
                                                   backgroundColor: AppColors
@@ -208,7 +207,7 @@ class _NotCompletedTabViewWidgetState extends State<NotCompletedTabViewWidget> {
                                             ),
                                             SizedBox(width: 8.w),
                                             Text(
-                                              '${(audioFile.audioPosition / audioFile.audioDuration * 100).toStringAsFixed(0)}%',
+                                              '${(progress * 100).toStringAsFixed(0)}%',
                                               style: TextStyle(
                                                 fontSize: 16.sp,
                                                 fontWeight: FontWeight.w600,
