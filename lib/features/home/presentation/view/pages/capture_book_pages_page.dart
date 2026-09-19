@@ -66,6 +66,10 @@ class _CaptureBookPagesPageState extends State<CaptureBookPagesPage> {
                 );
               }
               if (state is CreatePdfFromCapturedImagesSuccess) {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // Close the loading dialog
                 Navigator.of(context).pushReplacementNamed(
                   AppRoutes.processing,
                   arguments: {
@@ -75,6 +79,10 @@ class _CaptureBookPagesPageState extends State<CaptureBookPagesPage> {
                 );
               }
               if (state is CreatePdfFromCapturedImagesError) {
+                Navigator.of(
+                  context,
+                  rootNavigator: true,
+                ).pop(); // Close the loading dialog
                 AppToast.showToast(
                   context: context,
                   title: S.of(context).error,
@@ -239,7 +247,7 @@ class _CaptureBookPagesPageState extends State<CaptureBookPagesPage> {
                               onPressed: state.capturedPages.isNotEmpty
                                   ? () async {
                                       await widget.homeCubit
-                                          .creataPdfFromCapturedImages(
+                                          .createPdfFromCapturedImages(
                                             state.capturedPages,
                                           );
                                     }

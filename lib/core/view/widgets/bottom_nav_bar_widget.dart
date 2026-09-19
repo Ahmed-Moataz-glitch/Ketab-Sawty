@@ -84,9 +84,9 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
         gapLocation: GapLocation.none,
         // activeColor: AppColors.primary,
         // inactiveColor: AppColors.grey,
-        elevation: 10,
+        elevation: 8,
         backgroundColor: isLightTheme ? AppColors.white : AppColors.dark,
-        borderColor: isLightTheme ? AppColors.primary : AppColors.grey,
+        borderColor: isLightTheme ? AppColors.border : Colors.white10,
         tabBuilder: (index, isActive) {
           final color = isActive
               ? isLightTheme
@@ -94,20 +94,29 @@ class _BottomNavBarWidgetState extends State<BottomNavBarWidget> {
                     : AppColors.primaryLight
               : AppColors.textSecondary;
           return SizedBox.expand(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(tabs[index].icon, color: color, size: 24),
-                const SizedBox(height: 4),
-                Text(
-                  tabs[index].label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12.sp,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                  ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(tabs[index].icon, color: color, size: 22),
+                    const SizedBox(height: 2),
+                    Text(
+                      tabs[index].label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 11.sp,
+                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         },

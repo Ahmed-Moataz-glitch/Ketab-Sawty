@@ -1,10 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:ketab_sawty/core/utils/app_constants.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
 import 'package:ketab_sawty/core/utils/app_dialogs.dart';
 import 'package:ketab_sawty/features/home/data/model/audio_file_model.dart';
@@ -38,35 +41,97 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   final audioPlayer = AudioPlayer();
   late bool isFavorite;
   late bool isSaved;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    isFavorite = widget.isFavorite;
-    isSaved = widget.isSaved;
+    isFavorite = Hive.isBoxOpen(AppConstants.favoriteAudioFilesBox)
+        ? Hive.box<AudioFileModel>(AppConstants.favoriteAudioFilesBox)
+            .containsKey(widget.pdfDetailsModel.id)
+        : widget.isFavorite;
+    isSaved = Hive.isBoxOpen(AppConstants.savedAudioFilesBox)
+        ? Hive.box<AudioFileModel>(AppConstants.savedAudioFilesBox)
+            .containsKey(widget.pdfDetailsModel.id)
+        : widget.isSaved;
     audioPlayer.playbackEventStream.listen(
-      (event) {
-        // setState(() {});
-      },
+      (event) {},
       onError: (Object e, StackTrace stackTrace) {
-        debugPrint('Error: $e');
+        debugPrint('Playback event error: $e');
       },
     );
+    _initAudio();
+  }
+
+  Future<void> _saveCurrentPositionIfSaved() async {
+    if (isSaved) {
+      await widget.homeCubit.saveAudioFile(
+        AudioFileModel(
+          id: widget.pdfDetailsModel.id,
+          coverImageBytes: widget.pdfDetailsModel.coverImageBytes,
+          audioFilePath: widget.audioFile.path,
+          audioPosition: audioPlayer.position.inSeconds,
+          audioDuration: audioPlayer.duration?.inSeconds ?? 0,
+          title: widget.pdfDetailsModel.title,
+          author: widget.pdfDetailsModel.author ?? S.of(context).unknown,
+        ),
+      );
+    }
+  }
+
+  Future<void> _initAudio() async {
     try {
-      audioPlayer.setAudioSource(
-        // AudioSource.uri(
-        //   Uri.parse("https://serv2.albumaty.com/2025/Albumaty.Com_mhi_ftwny_afwk_lkramty_-_mn_mslsl_alst_mwnalyza.mp3"),
-        // ),
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
+
+      try {
+        final session = await AudioSession.instance;
+        await session.configure(const AudioSessionConfiguration.speech());
+      } catch (e) {
+        debugPrint('AudioSession configuration error: $e');
+      }
+
+      if (!await widget.audioFile.exists() || (await widget.audioFile.length()) <= 44) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'ملف الصوت غير صالح أو غير موجود.';
+          });
+        }
+        return;
+      }
+
+      await audioPlayer.setAudioSource(
         AudioSource.file(widget.audioFile.path),
         initialPosition: Duration(seconds: widget.audioPosition ?? 0),
       );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error loading audio: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'تعذر تحميل الملف الصوتي: $e';
+        });
+      }
     }
   }
 
   @override
   void dispose() {
+    try {
+      audioPlayer.stop();
+    } catch (_) {}
     audioPlayer.dispose();
     super.dispose();
   }
@@ -75,35 +140,27 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: isLightTheme ? AppColors.primary.withAlpha(100) : AppColors.dark,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.white, size: 30.sp),
-          onPressed: () async {
-            isSaved
-                ? await widget.homeCubit.saveAudioFile(
-                              AudioFileModel(
-                                id: widget.pdfDetailsModel.id,
-                                coverImageBytes:
-                                    widget.pdfDetailsModel.coverImageBytes,
-                                audioFilePath: widget.audioFile.path,
-                                audioPosition: audioPlayer.position.inSeconds,
-                                audioDuration: audioPlayer.duration?.inSeconds ?? 0,
-                                title: widget.pdfDetailsModel.title,
-                                author:
-                                    widget.pdfDetailsModel.author ??
-                                    S.of(context).error,
-                              ),
-                            )
-                            : null;
-            if(mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          await _saveCurrentPositionIfSaved();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: isLightTheme ? AppColors.primary.withAlpha(100) : AppColors.dark,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: AppColors.white, size: 30.sp),
+            onPressed: () async {
+              await _saveCurrentPositionIfSaved();
+              if (mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
         title: Column(
           children: [
             Text(
@@ -234,7 +291,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                                 title: widget.pdfDetailsModel.title,
                                 author:
                                     widget.pdfDetailsModel.author ??
-                                    S.of(context).error,
+                                    S.of(context).unknown,
                               ),
                             );
                       isFavorite = !isFavorite;
@@ -273,7 +330,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                                 title: widget.pdfDetailsModel.title,
                                 author:
                                     widget.pdfDetailsModel.author ??
-                                    S.of(context).error,
+                                    S.of(context).unknown,
                               ),
                             );
                       isSaved = !isSaved;
@@ -282,6 +339,28 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                   ),
                 ],
               ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.orangeAccent, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.orangeAccent, fontSize: 14.sp),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.refresh, color: AppColors.white, size: 24.sp),
+                        onPressed: _initAudio,
+                      ),
+                    ],
+                  ),
+                ),
               SizedBox(height: 16.h),
               setUpProgressBar(
                 audioPlayer: audioPlayer,
@@ -312,11 +391,19 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                       );
                     },
                   ),
-                  setUpPlayer(
-                    audioPlayer: audioPlayer,
-                    audioPosition: Duration(seconds: widget.audioPosition ?? 0),
-                    isLightTheme: isLightTheme,
-                  ),
+                  _isLoading
+                      ? Container(
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.all(8.r),
+                          width: 64.w,
+                          height: 64.h,
+                          child: const CircularProgressIndicator.adaptive(),
+                        )
+                      : setUpPlayer(
+                          audioPlayer: audioPlayer,
+                          audioPosition: Duration(seconds: widget.audioPosition ?? 0),
+                          isLightTheme: isLightTheme,
+                        ),
                   IconButton(
                     icon: Icon(
                       Icons.forward_10_outlined,
@@ -343,6 +430,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

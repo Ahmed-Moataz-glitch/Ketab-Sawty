@@ -32,40 +32,108 @@ class PdfViewPage extends StatefulWidget {
 class _PdfViewPageState extends State<PdfViewPage> {
   late final PageController _pageController;
   File? audioFile;
+  bool _isCreatingAudio = false;
+  bool _waitingForAudioPlayer = false;
+  bool _isDialogShown = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _initializeAudioFile();
+    _checkExistingAudioFile();
   }
 
-  Future<void> _initializeAudioFile() async {
-    final exists = await widget.homeCubit.isAudioFileExists(widget.pdfDetailsModel.id);
+  Future<void> _checkExistingAudioFile() async {
+    if (widget.pdfDetailsModel.id.isEmpty) return;
+    final exists =
+        await widget.homeCubit.isAudioFileExists(widget.pdfDetailsModel.id);
     if (exists) {
       final dir = await getApplicationDocumentsDirectory();
       final wavFile = File('${dir.path}/${widget.pdfDetailsModel.id}.wav');
       final mp3File = File('${dir.path}/${widget.pdfDetailsModel.id}.mp3');
-      final legacyFile = File('/storage/emulated/0/Music/${widget.pdfDetailsModel.id}.mp3');
-      if (await wavFile.exists()) {
+      final legacyFile =
+          File('/storage/emulated/0/Music/${widget.pdfDetailsModel.id}.mp3');
+      if (await wavFile.exists() && (await wavFile.length()) > 44) {
         audioFile = wavFile;
-      } else if (await mp3File.exists()) {
+      } else if (await mp3File.exists() && (await mp3File.length()) > 44) {
         audioFile = mp3File;
-      } else if (await legacyFile.exists()) {
+      } else if (await legacyFile.exists() && (await legacyFile.length()) > 44) {
         audioFile = legacyFile;
       }
       if (mounted) setState(() {});
-    } else {
-      await widget.homeCubit.createAudioFile(
-        text: widget.extractedText.join(' '),
-        fileName: widget.pdfDetailsModel.id,
+    }
+  }
+
+  void _closeLoadingDialog() {
+    if (_isDialogShown && mounted) {
+      _isDialogShown = false;
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
+
+  void _navigateToAudioPlayer() {
+    if (audioFile == null || !mounted) return;
+    try {
+      widget.homeCubit.tts.stop();
+    } catch (_) {}
+    Navigator.of(context).pushNamed(
+      AppRoutes.audioPlayer,
+      arguments: {
+        'homeCubit': widget.homeCubit,
+        'pdfDetailsModel': widget.pdfDetailsModel,
+        'audioFile': audioFile!,
+        'isFavorite': false,
+        'isSaved': false,
+      },
+    );
+  }
+
+  Future<void> _requestAudioPlayer() async {
+    final exists = audioFile != null && audioFile!.existsSync();
+    if (exists) {
+      _navigateToAudioPlayer();
+      return;
+    }
+
+    if (_isCreatingAudio) {
+      _waitingForAudioPlayer = true;
+      if (!_isDialogShown) {
+        _isDialogShown = true;
+        AppDialogs.showLoadingDialog(
+          context,
+          title: S.of(context).pdf_view_page_loading,
+        );
+      }
+      return;
+    }
+
+    _waitingForAudioPlayer = true;
+    _isCreatingAudio = true;
+    if (!_isDialogShown) {
+      _isDialogShown = true;
+      AppDialogs.showLoadingDialog(
+        context,
+        title: S.of(context).pdf_view_page_loading,
       );
     }
+
+    try {
+      final voice = VoiceCubit.get(context).getVoice();
+      widget.homeCubit.updateVoice(voice);
+    } catch (_) {}
+
+    await widget.homeCubit.createAudioFile(
+      text: widget.extractedText.join('\n'),
+      fileName: widget.pdfDetailsModel.id,
+    );
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    try {
+      widget.homeCubit.tts.stop();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -90,7 +158,8 @@ class _PdfViewPageState extends State<PdfViewPage> {
                 AppToast.showToast(
                   context: context,
                   title: S.of(context).pdf_view_page_app_toast_title1,
-                  description: S.of(context).pdf_view_page_app_toast_description1,
+                  description:
+                      S.of(context).pdf_view_page_app_toast_description1,
                   type: ToastificationType.success,
                 );
               }
@@ -107,34 +176,32 @@ class _PdfViewPageState extends State<PdfViewPage> {
           BlocListener<HomeCubit, HomeState>(
             bloc: widget.homeCubit,
             listenWhen: (previous, current) =>
-                current is CreatingAudioFile ||
                 current is CreateAudioFileSuccess ||
                 current is CreateAudioFileError,
             listener: (context, state) {
-              if (state is CreatingAudioFile) {
-                AppDialogs.showLoadingDialog(
-                  context,
-                  title: S.of(context).pdf_view_page_loading,
-                );
-              }
               if (state is CreateAudioFileSuccess) {
-                Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).pop(); // Close the loading dialog
                 audioFile = state.audioFile;
-                AppToast.showToast(
-                  context: context,
-                  title: S.of(context).pdf_view_page_app_toast_title2,
-                  description: S.of(context).pdf_view_page_app_toast_description2,
-                  type: ToastificationType.success,
-                );
+                _isCreatingAudio = false;
+                _closeLoadingDialog();
+
+                if (_waitingForAudioPlayer) {
+                  _waitingForAudioPlayer = false;
+                  _navigateToAudioPlayer();
+                } else {
+                  AppToast.showToast(
+                    context: context,
+                    title: S.of(context).pdf_view_page_app_toast_title2,
+                    description:
+                        S.of(context).pdf_view_page_app_toast_description2,
+                    type: ToastificationType.success,
+                  );
+                }
               }
               if (state is CreateAudioFileError) {
-                Navigator.of(
-                  context,
-                  rootNavigator: true,
-                ).pop(); // Close the loading dialog
+                _isCreatingAudio = false;
+                _waitingForAudioPlayer = false;
+                _closeLoadingDialog();
+
                 AppToast.showToast(
                   context: context,
                   title: S.of(context).error,
@@ -160,13 +227,17 @@ class _PdfViewPageState extends State<PdfViewPage> {
               //   currentPageIndex = value;
               // },
               itemBuilder: (context, index) {
-                int currentWordStartIndex = 0;
-                int currentWordEndIndex = 0;
+                final fullText = widget.extractedText[index];
+                final textLen = fullText.length;
+                int safeStart = 0;
+                int safeEnd = 0;
                 if (state is GetCurrentWordIndex) {
-                  currentWordStartIndex =
+                  final rawStart =
                       state.currentWordIndex['currentWordStartIndex'] ?? 0;
-                  currentWordEndIndex =
+                  final rawEnd =
                       state.currentWordIndex['currentWordEndIndex'] ?? 0;
+                  safeStart = rawStart.clamp(0, textLen);
+                  safeEnd = rawEnd.clamp(safeStart, textLen);
                 }
                 return SingleChildScrollView(
                   child: Padding(
@@ -177,10 +248,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                         children: [
                           Text.rich(
                             TextSpan(
-                              text: widget.extractedText[index].substring(
-                                0,
-                                currentWordStartIndex,
-                              ),
+                              text: fullText.substring(0, safeStart),
                               style: TextStyle(
                                 fontSize: 23.sp,
                                 fontWeight: FontWeight.w500,
@@ -188,10 +256,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                               ),
                               children: [
                                 TextSpan(
-                                  text: widget.extractedText[index].substring(
-                                    currentWordStartIndex,
-                                    currentWordEndIndex,
-                                  ),
+                                  text: fullText.substring(safeStart, safeEnd),
                                   style: TextStyle(
                                     fontSize: 23.sp,
                                     fontWeight: FontWeight.w500,
@@ -201,9 +266,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: widget.extractedText[index].substring(
-                                    currentWordEndIndex,
-                                  ),
+                                  text: fullText.substring(safeEnd),
                                   style: TextStyle(
                                     fontSize: 23.sp,
                                     fontWeight: FontWeight.w500,
@@ -230,32 +293,7 @@ class _PdfViewPageState extends State<PdfViewPage> {
                           ),
                           SizedBox(height: 20.h),
                           CustomButtonWidget(
-                            onPressed: () async {
-                              final exists = audioFile != null && audioFile!.existsSync();
-                              if (!exists) {
-                                if (context.mounted) {
-                                  AppToast.showToast(
-                                    context: context,
-                                    title: S.of(context).processing_page_app_bar,
-                                    description: S.of(context).pdf_view_page_loading,
-                                    type: ToastificationType.info,
-                                  );
-                                }
-                                await _initializeAudioFile();
-                                return;
-                              }
-                              if (!context.mounted) return;
-                              Navigator.of(context).pushNamed(
-                                AppRoutes.audioPlayer,
-                                arguments: {
-                                  'homeCubit': widget.homeCubit,
-                                  'pdfDetailsModel': widget.pdfDetailsModel,
-                                  'audioFile': audioFile!,
-                                  'isFavorite': false,
-                                  'isSaved': false,
-                                },
-                              );
-                            },
+                            onPressed: _requestAudioPlayer,
                             title: S.of(context).pdf_view_page_title2,
                             icon: Icons.volume_up,
                           ),
@@ -270,6 +308,9 @@ class _PdfViewPageState extends State<PdfViewPage> {
                                   onPressed:
                                       index < widget.extractedText.length - 1
                                       ? () {
+                                          try {
+                                            widget.homeCubit.tts.stop();
+                                          } catch (_) {}
                                           _pageController.nextPage(
                                             duration: const Duration(
                                               milliseconds: 300,
@@ -285,6 +326,9 @@ class _PdfViewPageState extends State<PdfViewPage> {
                                   title: S.of(context).pdf_view_page_title3,
                                   onPressed: index > 0
                                       ? () {
+                                          try {
+                                            widget.homeCubit.tts.stop();
+                                          } catch (_) {}
                                           _pageController.previousPage(
                                             duration: const Duration(
                                               milliseconds: 300,

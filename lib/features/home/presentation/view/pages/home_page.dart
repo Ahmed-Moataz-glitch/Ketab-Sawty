@@ -62,90 +62,92 @@ class _HomePageState extends State<HomePage> {
               ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(width: size.width),
-            Row(
-              spacing: 6.w,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  S.of(context).home_page_title1,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(16.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(width: size.width),
+              Row(
+                spacing: 6.w,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    S.of(context).home_page_title1,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
                   ),
-                ),
-                Icon(Icons.waving_hand, color: AppColors.yellow, size: 24.sp),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              S.of(context).home_page_title2,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 36.sp,
-                fontWeight: FontWeight.bold,
-                color: isLightTheme ? AppColors.primary : AppColors.grey,
+                  Icon(Icons.waving_hand, color: AppColors.yellow, size: 24.sp),
+                ],
               ),
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              S.of(context).home_page_title3,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-                color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
+              SizedBox(height: 16.h),
+              Text(
+                S.of(context).home_page_title2,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 36.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isLightTheme ? AppColors.primary : AppColors.grey,
+                ),
               ),
-            ),
-            SizedBox(height: 36.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Icon(
-                  Icons.multitrack_audio,
-                  color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
-                  size: 64.sp,
+              SizedBox(height: 16.h),
+              Text(
+                S.of(context).home_page_title3,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
                 ),
-                Image.asset(
-                  AppAssets.audioBookImage,
-                  height: size.height * 0.15,
-                  color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
-                ),
-                Icon(
-                  Icons.multitrack_audio,
-                  color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
-                  size: 64.sp,
-                ),
-              ],
-            ),
-            SizedBox(height: 36.h),
-            CustomButtonWidget(
-              title: S.of(context).home_page_title4,
-              icon: Icons.upload_file,
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pushNamed(AppRoutes.uploadPdf, arguments: widget.homeCubit);
-              },
-            ),
-            SizedBox(height: 16.h),
-            CustomButtonWidget(
-              backgroundColor: AppColors.white,
-              title: S.of(context).home_page_title5,
-              icon: Icons.camera_alt_rounded,
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pushNamed(AppRoutes.captureBookPages, arguments: widget.homeCubit);
-              },
-            ),
-          ],
+              ),
+              SizedBox(height: 36.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Icon(
+                    Icons.multitrack_audio,
+                    color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
+                    size: 64.sp,
+                  ),
+                  Image.asset(
+                    AppAssets.audioBookImage,
+                    height: size.height * 0.15,
+                    color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
+                  ),
+                  Icon(
+                    Icons.multitrack_audio,
+                    color: isLightTheme ? AppColors.primary.withAlpha(80) : AppColors.white.withAlpha(80),
+                    size: 64.sp,
+                  ),
+                ],
+              ),
+              SizedBox(height: 36.h),
+              CustomButtonWidget(
+                title: S.of(context).home_page_title4,
+                icon: Icons.upload_file,
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed(AppRoutes.uploadPdf, arguments: widget.homeCubit);
+                },
+              ),
+              SizedBox(height: 16.h),
+              CustomButtonWidget(
+                backgroundColor: AppColors.white,
+                title: S.of(context).home_page_title5,
+                icon: Icons.camera_alt_rounded,
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed(AppRoutes.captureBookPages, arguments: widget.homeCubit);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -20,6 +20,7 @@ import 'package:ketab_sawty/features/home/domain/use_cases/save_audio_file_use_c
 import 'package:ketab_sawty/features/home/domain/use_cases/speak_arabic_use_case.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import 'package:ketab_sawty/core/utils/shared_preferences.dart';
 import 'package:ketab_sawty/core/view_model/voice_cubit/voice_cubit.dart';
 
@@ -91,7 +92,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
-  Future<void> creataPdfFromCapturedImages(List<XFile> images) async {
+  Future<void> createPdfFromCapturedImages(List<XFile> images) async {
     emit(CreatePdfFromCapturedImagesLoading());
     try {
       final pdfDetails = await createPdfFromCapturedImagesUseCase.call(images);
@@ -106,29 +107,100 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> processPdf(Uint8List pdfBytes) async {
+    sf.PdfDocument? sfDoc;
+    pdfx.PdfDocument? pdfxDoc;
     try {
-      final document = await pdfx.PdfDocument.openData(pdfBytes);
-      final total = document.pagesCount;
-
+      // 1. Open Syncfusion document to check for digital text
+      sfDoc = sf.PdfDocument(inputBytes: pdfBytes);
+      final totalPages = sfDoc.pages.count;
       final results = <String>[];
-      emit(ProcessingPdf(currrentPage: 0, totalPages: total));
+      emit(ProcessingPdf(currrentPage: 0, totalPages: totalPages));
 
-      for (int page = 1; page <= total; page++) {
-        final text = await ocrFirstPageFromPdfBytes(
-          currentPage: page,
-          pdfBytes: pdfBytes,
-        );
-        results.add(text);
+      final textExtractor = sf.PdfTextExtractor(sfDoc);
 
-        emit(
-          ProcessingPdf(currrentPage: page, totalPages: total),
-        ); // update progress
+      for (int page = 1; page <= totalPages; page++) {
+        String pageText = '';
+        try {
+          // Syncfusion pages are 0-indexed
+          pageText = textExtractor.extractText(
+            startPageIndex: page - 1,
+            endPageIndex: page - 1,
+          );
+          pageText = normalizeArabicOcr(pageText);
+        } catch (e) {
+          debugPrint('Digital text extraction failed for page $page: $e');
+        }
+
+        // If digital text extraction found substantial text (>= 15 characters), use it!
+        if (pageText.trim().length >= 15) {
+          results.add(pageText);
+        } else {
+          // Scanned page fallback: use Tesseract OCR
+          // Lazily open pdfx document once for the whole loop
+          pdfxDoc ??= await pdfx.PdfDocument.openData(pdfBytes);
+          final ocrText = await _ocrPage(
+            document: pdfxDoc,
+            currentPage: page,
+          );
+          results.add(ocrText.isNotEmpty ? ocrText : pageText);
+        }
+
+        emit(ProcessingPdf(currrentPage: page, totalPages: totalPages));
       }
 
-      await document.close();
       emit(ProcessingPdfSuccess(results));
     } catch (e) {
       emit(ProcessingPdfError(e.toString()));
+    } finally {
+      sfDoc?.dispose();
+      await pdfxDoc?.close();
+    }
+  }
+
+  Future<String> _ocrPage({
+    required pdfx.PdfDocument document,
+    required int currentPage,
+  }) async {
+    final page = await document.getPage(currentPage);
+    File? tempImageFile;
+    try {
+      // Scale by 2.0x instead of 5.0x for optimal OCR speed & memory usage (~300 DPI)
+      final pageImage = await page.render(
+        width: page.width * 2,
+        height: page.height * 2,
+        format: pdfx.PdfPageImageFormat.png,
+      );
+      if (pageImage == null) {
+        return '';
+      }
+
+      final dir = await getTemporaryDirectory();
+      tempImageFile = File(
+        '${dir.path}/page_${currentPage}_${DateTime.now().microsecondsSinceEpoch}.png',
+      );
+      await tempImageFile.writeAsBytes(pageImage.bytes);
+
+      final text = await FlutterTesseractOcr.extractText(
+        tempImageFile.path,
+        language: 'ara',
+        args: {
+          "psm": "3",
+          "oem": "1",
+        },
+      );
+      return normalizeArabicOcr(text);
+    } catch (e) {
+      debugPrint('OCR extraction error on page $currentPage: $e');
+      return '';
+    } finally {
+      await page.close();
+      if (tempImageFile != null) {
+        try {
+          if (await tempImageFile.exists()) {
+            await tempImageFile.delete();
+          }
+        } catch (_) {}
+      }
     }
   }
 
@@ -137,43 +209,9 @@ class HomeCubit extends Cubit<HomeState> {
     required Uint8List pdfBytes,
   }) async {
     final document = await pdfx.PdfDocument.openData(pdfBytes);
-    final page = await document.getPage(currentPage);
-
-    final pageImage = await page.render(
-      width: page.width * 5,
-      height: page.height * 5,
-      format: pdfx.PdfPageImageFormat.png,
-    );
-    if (pageImage == null) {
-      await page.close();
-      await document.close();
-      throw Exception('Failed to render PDF page to image.');
-    }
-    // var image = img.decodeImage(pageImage.bytes);
-    // image = img.grayscale(image!);
-    // image = img.contrast(image, contrast: 1.2);
-    // image = img.gaussianBlur(image, radius: 1);
-    // image = img.luminanceThreshold(image, threshold: 150); // عدّل حسب صورك
-    final dir = await getTemporaryDirectory();
-    final imageFile = File(
-      '${dir.path}/page$currentPage${DateTime.now().millisecondsSinceEpoch}.png',
-    );
-    await imageFile.writeAsBytes(pageImage.bytes);
-
     try {
-      final text = FlutterTesseractOcr.extractText(
-        imageFile.path,
-        language: 'ara',
-        args: {
-          "psm": "6",
-          "oem": "1",
-          // "preserve_interword_spaces": "1",
-          // "user_defined_dpi": "300",
-        },
-      );
-      return normalizeArabicOcr(await text);
+      return await _ocrPage(document: document, currentPage: currentPage);
     } finally {
-      await page.close();
       await document.close();
     }
   }
@@ -250,7 +288,8 @@ class HomeCubit extends Cubit<HomeState> {
       );
       emit(CreateAudioFileSuccess(audioFile));
     } catch (e) {
-      emit(CreateAudioFileError('Failed to create audio file: $e'));
+      final message = e.toString().replaceFirst('Exception: ', '').trim();
+      emit(CreateAudioFileError(message));
     }
   }
 

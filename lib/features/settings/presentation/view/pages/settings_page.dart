@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
-import 'package:ketab_sawty/core/utils/app_localization.dart';
 import 'package:ketab_sawty/core/utils/app_routes.dart';
 import 'package:ketab_sawty/features/settings/presentation/view/widgets/row_item_widget.dart';
 import 'package:ketab_sawty/generated/l10n.dart';
@@ -17,7 +16,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final isLightTheme = Theme.of(context).brightness == Brightness.light;
-    final isArabic = AppLocalization.isArabic();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -31,16 +29,22 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.all(16.r),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
               decoration: BoxDecoration(
-                color: isLightTheme ? AppColors.white : AppColors.dark.withAlpha(240),
-                borderRadius: BorderRadius.circular(16.r),
+                color: isLightTheme
+                    ? AppColors.white
+                    : AppColors.dark.withAlpha(240),
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: isLightTheme ? AppColors.border : Colors.white10,
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.grey.withAlpha(50),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
+                    color: Colors.black.withAlpha(isLightTheme ? 8 : 40),
+                    spreadRadius: 0,
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -50,87 +54,93 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Icons.volume_up_outlined,
                     title: S.of(context).settings_page_title1,
                     items: [
-                      S.of(context).settings_page_title1_value1, 
-                      S.of(context).settings_page_title1_value2, 
+                      S.of(context).settings_page_title1_value1,
+                      S.of(context).settings_page_title1_value2,
                       S.of(context).settings_page_title1_value3,
                     ],
                   ),
                   Divider(
-                    color: AppColors.grey.withAlpha(100),
+                    color: isLightTheme
+                        ? AppColors.border.withAlpha(180)
+                        : Colors.white10,
                     thickness: 1,
-                    height: 32.h,
+                    height: 24.h,
                   ),
                   RowItemWidget(
                     icon: Icons.brightness_6_outlined,
                     title: S.of(context).settings_page_title2,
                     items: [
-                      S.of(context).settings_page_title2_value1, 
+                      S.of(context).settings_page_title2_value1,
                       S.of(context).settings_page_title2_value2,
                       S.of(context).settings_page_title2_value3,
                     ],
                   ),
                   Divider(
-                    color: AppColors.grey.withAlpha(100),
+                    color: isLightTheme
+                        ? AppColors.border.withAlpha(180)
+                        : Colors.white10,
                     thickness: 1,
-                    height: 32.h,
+                    height: 24.h,
                   ),
                   RowItemWidget(
                     icon: Icons.language_outlined,
                     title: S.of(context).settings_page_title3,
                     items: [
-                      S.of(context).settings_page_title3_value1, 
+                      S.of(context).settings_page_title3_value1,
                       S.of(context).settings_page_title3_value2,
                     ],
                   ),
                   Divider(
-                    color: AppColors.grey.withAlpha(100),
+                    color: isLightTheme
+                        ? AppColors.border.withAlpha(180)
+                        : Colors.white10,
                     thickness: 1,
-                    height: 32.h,
+                    height: 24.h,
                   ),
                   InkWell(
-                    splashFactory: NoSplash.splashFactory,
+                    borderRadius: BorderRadius.circular(10.r),
                     onTap: () {
-                      Navigator.of(context).pushNamed(
-                        AppRoutes.about,
-                      );
+                      Navigator.of(context).pushNamed(AppRoutes.about);
                     },
-                    child: isArabic
-                        ? Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      spacing: 16.w,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 28.sp,
-                        ),
-                        Text(
-                          S.of(context).settings_page_title4,
-                          style: TextStyle(
-                            color: isLightTheme ? AppColors.textPrimary : AppColors.white,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4.h),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8.r),
+                            decoration: BoxDecoration(
+                              color: isLightTheme
+                                  ? AppColors.primary.withAlpha(20)
+                                  : AppColors.white.withAlpha(25),
+                              borderRadius: BorderRadius.circular(10.r),
+                            ),
+                            child: Icon(
+                              Icons.info_outline_rounded,
+                              size: 22.sp,
+                              color: isLightTheme
+                                  ? AppColors.primary
+                                  : AppColors.primaryLight,
+                            ),
                           ),
-                        ),
-                      ],
-                    )
-                    : Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      spacing: 16.w,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 28.sp,
-                        ),
-                        Text(
-                          S.of(context).settings_page_title4,
-                          style: TextStyle(
-                            color: isLightTheme ? AppColors.textPrimary : AppColors.white,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
+                          SizedBox(width: 14.w),
+                          Text(
+                            S.of(context).settings_page_title4,
+                            style: TextStyle(
+                              color: isLightTheme
+                                  ? AppColors.textPrimary
+                                  : AppColors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                          const Spacer(),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14.sp,
+                            color: AppColors.grey,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

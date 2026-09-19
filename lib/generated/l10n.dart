@@ -18,8 +18,10 @@ class S {
   static S? _current;
 
   static S get current {
-    assert(_current != null,
-        'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.');
+    assert(
+      _current != null,
+      'No instance of S was loaded. Try to initialize the S delegate before accessing S.current.',
+    );
     return _current!;
   }
 
@@ -41,8 +43,10 @@ class S {
 
   static S of(BuildContext context) {
     final instance = S.maybeOf(context);
-    assert(instance != null,
-        'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?');
+    assert(
+      instance != null,
+      'No instance of S present in the widget tree. Did you add S.delegate in localizationsDelegates?',
+    );
     return instance!;
   }
 
@@ -52,62 +56,32 @@ class S {
 
   /// `Error`
   String get error {
-    return Intl.message(
-      'Error',
-      name: 'error',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Error', name: 'error', desc: '', args: []);
   }
 
   /// `From`
   String get from {
-    return Intl.message(
-      'From',
-      name: 'from',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('From', name: 'from', desc: '', args: []);
   }
 
   /// `Unknown`
   String get unknown {
-    return Intl.message(
-      'Unknown',
-      name: 'unknown',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Unknown', name: 'unknown', desc: '', args: []);
   }
 
   /// `Page`
   String get page {
-    return Intl.message(
-      'Page',
-      name: 'page',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Page', name: 'page', desc: '', args: []);
   }
 
   /// `Pages`
   String get pages {
-    return Intl.message(
-      'Pages',
-      name: 'pages',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Pages', name: 'pages', desc: '', args: []);
   }
 
   /// `The page`
   String get the_page {
-    return Intl.message(
-      'The page',
-      name: 'the_page',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('The page', name: 'the_page', desc: '', args: []);
   }
 
   /// `Home`
@@ -543,7 +517,7 @@ class S {
   /// `Voice used`
   String get settings_page_title1 {
     return Intl.message(
-      'Voice used',
+      'Voice',
       name: 'settings_page_title1',
       desc: '',
       args: [],

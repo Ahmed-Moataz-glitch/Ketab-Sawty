@@ -77,7 +77,7 @@ class _MyLibraryPageState extends State<MyLibraryPage>
             // ),
             SizedBox(height: 32.h),
             DefaultTabController(
-              initialIndex: isArabic ? 2 : 0,
+              initialIndex: 0,
               length: categories.length,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

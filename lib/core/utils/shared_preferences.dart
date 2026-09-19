@@ -50,10 +50,10 @@ class FlutterSharedPreferences {
     if (language != null) {
       return LanguageModeState.values.firstWhere(
         (e) => e.toString() == language,
-        orElse: () => LanguageModeState.english,
+        orElse: () => LanguageModeState.arabic,
       );
     }
-    return LanguageModeState.english;
+    return LanguageModeState.arabic;
   }
 
   Future<void> removeLanguage() async {

@@ -156,6 +156,15 @@ Widget setUpVolumeControl(AudioPlayer audioPlayer) {
   );
 }
 
+String _formatDuration(Duration d) {
+  final minutes = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+  final seconds = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+  if (d.inHours > 0) {
+    return '${d.inHours}:$minutes:$seconds';
+  }
+  return '$minutes:$seconds';
+}
+
 Widget setUpProgressBar({
   required AudioPlayer audioPlayer,
   required Duration audioPosition,
@@ -170,18 +179,47 @@ Widget setUpProgressBar({
       final currentVal = duration.inSeconds > 0
           ? position.inSeconds.toDouble().clamp(0.0, maxVal)
           : 0.0;
-      return Slider(
-        min: 0.0,
-        max: maxVal,
-        value: currentVal,
-        activeColor: AppColors.white,
-        inactiveColor: AppColors.grey.withAlpha(80),
-        padding: EdgeInsets.symmetric(horizontal: 28.r),
-        onChanged: duration.inSeconds > 0
-            ? (value) {
-                audioPlayer.seek(Duration(seconds: value.toInt()));
-              }
-            : null,
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Slider(
+            min: 0.0,
+            max: maxVal,
+            value: currentVal,
+            activeColor: AppColors.white,
+            inactiveColor: AppColors.grey.withAlpha(80),
+            padding: EdgeInsets.symmetric(horizontal: 28.r),
+            onChanged: duration.inSeconds > 0
+                ? (value) {
+                    audioPlayer.seek(Duration(seconds: value.toInt()));
+                  }
+                : null,
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.r),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDuration(position),
+                  style: TextStyle(
+                    color: AppColors.white.withAlpha(200),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  _formatDuration(duration),
+                  style: TextStyle(
+                    color: AppColors.white.withAlpha(200),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
     },
   );

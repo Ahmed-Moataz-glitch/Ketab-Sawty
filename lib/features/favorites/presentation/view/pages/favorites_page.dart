@@ -38,117 +38,123 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLightTheme = Theme.of(context).brightness == Brightness.light;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          S.of(context).favorites_page_app_bar,
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: isLightTheme
-                ? AppColors.textPrimary
-                : AppColors.white.withAlpha(220),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            S.of(context).favorites_page_app_bar,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: isLightTheme
+                  ? AppColors.textPrimary
+                  : AppColors.white.withAlpha(220),
+            ),
           ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: BlocBuilder<FavoritesCubit, FavoritesState>(
-        bloc: favoritesCubit,
-        buildWhen: (previous, current) =>
-            current is GetAllAudioFilesFromFavoriteSuccess,
-        builder: (context, state) {
-          if (state is GetAllAudioFilesFromFavoriteSuccess) {
-            return state.audioFiles.isEmpty
-                ? Center(
-                    child: Text(
-                      S.of(context).favorites_page_title1,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: isLightTheme
-                            ? AppColors.textPrimary
-                            : AppColors.textSecondary,
+        body: BlocBuilder<FavoritesCubit, FavoritesState>(
+          bloc: favoritesCubit,
+          buildWhen: (previous, current) =>
+              current is GetAllAudioFilesFromFavoriteSuccess,
+          builder: (context, state) {
+            if (state is GetAllAudioFilesFromFavoriteSuccess) {
+              return state.audioFiles.isEmpty
+                  ? Center(
+                      child: Text(
+                        S.of(context).favorites_page_title1,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isLightTheme
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  )
-                : Padding(
-                    padding: EdgeInsets.all(16.r),
-                    child: ListView.separated(
-                      itemCount: state.audioFiles.length,
-                      separatorBuilder: (context, index) =>
-                          SizedBox(height: 16.h),
-                      itemBuilder: (context, index) {
-                        final audioFile = state.audioFiles[index];
-                        return InkWell(
-                          splashFactory: NoSplash.splashFactory,
-                          onTap: () {
-                            Navigator.of(context)
-                                .pushNamed(
-                                  AppRoutes.audioPlayer,
-                                  arguments: {
-                                    'homeCubit': widget.homeCubit,
-                                    'pdfDetailsModel': PdfDetailsModel(
-                                      id: audioFile.id,
-                                      title: audioFile.title,
-                                      author: audioFile.author,
-                                      coverImageBytes:
-                                          audioFile.coverImageBytes,
-                                    ),
-                                    'audioFile': File(audioFile.audioFilePath),
-                                    'audioPosition': audioFile.audioPosition,
-                                    'isFavorite': true,
-                                    'isSaved': false,
-                                  },
-                                )
-                                .then((_) {
-                                  favoritesCubit.getAllAudioFilesFromFavorite();
-                                });
-                          },
-                          child: Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(16.r),
-                                child: Image.memory(
-                                  audioFile.coverImageBytes,
-                                  width: size.width * 0.25,
-                                  height: size.height * 0.12,
-                                  fit: BoxFit.fill,
+                    )
+                  : Padding(
+                      padding: EdgeInsets.all(16.r),
+                      child: ListView.separated(
+                        itemCount: state.audioFiles.length,
+                        separatorBuilder: (context, index) =>
+                            SizedBox(height: 16.h),
+                        itemBuilder: (context, index) {
+                          final audioFile = state.audioFiles[index];
+                          return InkWell(
+                            splashFactory: NoSplash.splashFactory,
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pushNamed(
+                                    AppRoutes.audioPlayer,
+                                    arguments: {
+                                      'homeCubit': widget.homeCubit,
+                                      'pdfDetailsModel': PdfDetailsModel(
+                                        id: audioFile.id,
+                                        title: audioFile.title,
+                                        author: audioFile.author,
+                                        coverImageBytes:
+                                            audioFile.coverImageBytes,
+                                      ),
+                                      'audioFile': File(
+                                        audioFile.audioFilePath,
+                                      ),
+                                      'audioPosition': audioFile.audioPosition,
+                                      'isFavorite': true,
+                                      'isSaved': false,
+                                    },
+                                  )
+                                  .then((_) {
+                                    favoritesCubit
+                                        .getAllAudioFilesFromFavorite();
+                                  });
+                            },
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16.r),
+                                  child: Image.memory(
+                                    audioFile.coverImageBytes,
+                                    width: size.width * 0.25,
+                                    height: size.height * 0.12,
+                                    fit: BoxFit.fill,
+                                  ),
                                 ),
-                              ),
-                              const Spacer(),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    audioFile.title,
-                                    style: TextStyle(
-                                      color: isLightTheme
-                                          ? AppColors.textPrimary
-                                          : AppColors.white.withAlpha(220),
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.bold,
+                                const Spacer(),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      audioFile.title,
+                                      style: TextStyle(
+                                        color: isLightTheme
+                                            ? AppColors.textPrimary
+                                            : AppColors.white.withAlpha(220),
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    audioFile.author,
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.grey,
+                                    Text(
+                                      audioFile.author,
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.grey,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-          } else {
-            return const SizedBox.shrink();
-          }
-        },
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    );
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
+        ),
       ),
     );
   }

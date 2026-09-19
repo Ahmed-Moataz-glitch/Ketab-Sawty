@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:ketab_sawty/core/utils/app_colors.dart';
 
 abstract class AppTheme {
@@ -13,7 +12,7 @@ abstract class AppTheme {
       iconTheme: IconThemeData(color: AppColors.textPrimary),
       titleTextStyle: TextStyle(
         color: AppColors.textPrimary,
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
     ),
@@ -28,7 +27,7 @@ abstract class AppTheme {
       iconTheme: IconThemeData(color: AppColors.white),
       titleTextStyle: TextStyle(
         color: AppColors.white,
-        fontSize: 20.sp,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
     ),

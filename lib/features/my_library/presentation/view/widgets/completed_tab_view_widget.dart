@@ -35,207 +35,237 @@ class _CompletedTabViewWidgetState extends State<CompletedTabViewWidget> {
     final size = MediaQuery.of(context).size;
     final isLightTheme = Theme.of(context).brightness == Brightness.light;
     final isArabic = AppLocalization.isArabic();
-    return Scaffold(
-      body: BlocBuilder<MyLibraryCubit, MyLibraryState>(
-        bloc: widget.myLibraryCubit,
-        buildWhen: (previous, current) =>
-            current is GetAllAudioFilesFromSavedSuccess,
-        builder: (context, state) {
-          if (state is GetAllAudioFilesFromSavedSuccess) {
-            final completedAudioFiles = state.audioFiles
-                .where(
-                  (audioFile) =>
-                      audioFile.audioPosition >= audioFile.audioDuration,
-                )
-                .toList();
-            return completedAudioFiles.isEmpty
-                ? Center(
-                    child: Text(
-                      S.of(context).my_library_page_title3,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: isLightTheme ? AppColors.textPrimary : AppColors.textSecondary,
-                      ),
-                    ),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
+        body: BlocBuilder<MyLibraryCubit, MyLibraryState>(
+          bloc: widget.myLibraryCubit,
+          buildWhen: (previous, current) =>
+              current is GetAllAudioFilesFromSavedSuccess,
+          builder: (context, state) {
+            if (state is GetAllAudioFilesFromSavedSuccess) {
+              final completedAudioFiles = state.audioFiles
+                  .where(
+                    (audioFile) =>
+                        audioFile.audioDuration > 0 &&
+                        audioFile.audioPosition >= audioFile.audioDuration,
                   )
-                : Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.r,
-                      vertical: 36.r,
-                    ),
-                    child: ListView.separated(
-                      itemCount: completedAudioFiles.length,
-                      separatorBuilder: (context, index) =>
-                          SizedBox(height: 16.h),
-                      itemBuilder: (context, index) {
-                        final audioFile = completedAudioFiles[index];
-                        final progress = audioFile.audioDuration > 0
-                            ? (audioFile.audioPosition / audioFile.audioDuration).clamp(0.0, 1.0)
-                            : 0.0;
-                        return InkWell(
-                          splashFactory: NoSplash.splashFactory,
-                          onTap: () {
-                            Navigator.of(context)
-                                .pushNamed(
-                                  AppRoutes.audioPlayer,
-                                  arguments: {
-                                    'homeCubit': widget.homeCubit,
-                                    'pdfDetailsModel': PdfDetailsModel(
-                                      id: audioFile.id,
-                                      title: audioFile.title,
-                                      author: audioFile.author,
-                                      coverImageBytes:
+                  .toList();
+              return completedAudioFiles.isEmpty
+                  ? Center(
+                      child: Text(
+                        S.of(context).my_library_page_title3,
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isLightTheme
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    )
+                  : Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.r,
+                        vertical: 36.r,
+                      ),
+                      child: ListView.separated(
+                        itemCount: completedAudioFiles.length,
+                        separatorBuilder: (context, index) =>
+                            SizedBox(height: 16.h),
+                        itemBuilder: (context, index) {
+                          final audioFile = completedAudioFiles[index];
+                          final progress = audioFile.audioDuration > 0
+                              ? (audioFile.audioPosition /
+                                        audioFile.audioDuration)
+                                    .clamp(0.0, 1.0)
+                              : 0.0;
+                          return InkWell(
+                            splashFactory: NoSplash.splashFactory,
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pushNamed(
+                                    AppRoutes.audioPlayer,
+                                    arguments: {
+                                      'homeCubit': widget.homeCubit,
+                                      'pdfDetailsModel': PdfDetailsModel(
+                                        id: audioFile.id,
+                                        title: audioFile.title,
+                                        author: audioFile.author,
+                                        coverImageBytes:
+                                            audioFile.coverImageBytes,
+                                      ),
+                                      'audioFile': File(
+                                        audioFile.audioFilePath,
+                                      ),
+                                      'audioPosition': audioFile.audioPosition,
+                                      'isFavorite': false,
+                                      'isSaved': true,
+                                    },
+                                  )
+                                  .then((_) {
+                                    widget.myLibraryCubit
+                                        .getAllAudioFilesFromSaved();
+                                  });
+                            },
+                            child: isArabic
+                                ? Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
+                                        child: Image.memory(
                                           audioFile.coverImageBytes,
-                                    ),
-                                    'audioFile': File(audioFile.audioFilePath),
-                                    'audioPosition': audioFile.audioPosition,
-                                    'isFavorite': false,
-                                    'isSaved': true,
-                                  },
-                                )
-                                .then((_) {
-                                  widget.myLibraryCubit
-                                      .getAllAudioFilesFromSaved();
-                                });
-                          },
-                          child: isArabic
-                              ? Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16.r),
-                                      child: Image.memory(
-                                        audioFile.coverImageBytes,
-                                        width: size.width * 0.25,
-                                        height: size.height * 0.11,
-                                        fit: BoxFit.fill,
+                                          width: size.width * 0.25,
+                                          height: size.height * 0.11,
+                                          fit: BoxFit.fill,
+                                        ),
                                       ),
-                                    ),
-                                    const Spacer(),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      spacing: 8.h,
-                                      children: [
-                                        Text(
-                                          audioFile.title,
-                                          style: TextStyle(
-                                            color: isLightTheme ? AppColors.textPrimary : AppColors.white.withAlpha(220),
-                                            fontSize: 17.sp,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(
-                                          audioFile.author,
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.grey,
-                                          ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              '${(progress * 100).toStringAsFixed(0)}%',
-                                              style: TextStyle(
-                                                fontSize: 17.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
-                                              ),
+                                      const Spacer(),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        spacing: 8.h,
+                                        children: [
+                                          Text(
+                                            audioFile.title,
+                                            style: TextStyle(
+                                              color: isLightTheme
+                                                  ? AppColors.textPrimary
+                                                  : AppColors.white.withAlpha(
+                                                      220,
+                                                    ),
+                                              fontSize: 17.sp,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                            SizedBox(width: 8.w),
-                                            SizedBox(
-                                              width: size.width * 0.4,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8.r),
-                                                child: LinearProgressIndicator(
-                                                  value: progress,
-                                                  color: isLightTheme ? AppColors.primary : AppColors.primaryLight,
-                                                  minHeight: 6.h,
-                                                  backgroundColor: AppColors
-                                                      .grey
-                                                      .withAlpha(50),
+                                          ),
+                                          Text(
+                                            audioFile.author,
+                                            style: TextStyle(
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.grey,
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                '${(progress * 100).toStringAsFixed(0)}%',
+                                                style: TextStyle(
+                                                  fontSize: 17.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isLightTheme
+                                                      ? AppColors.primary
+                                                      : AppColors.primaryLight,
                                                 ),
                                               ),
+                                              SizedBox(width: 8.w),
+                                              SizedBox(
+                                                width: size.width * 0.4,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        8.r,
+                                                      ),
+                                                  child:
+                                                      LinearProgressIndicator(
+                                                        value: progress,
+                                                        color: isLightTheme
+                                                            ? AppColors.primary
+                                                            : AppColors
+                                                                  .primaryLight,
+                                                        minHeight: 6.h,
+                                                        backgroundColor:
+                                                            AppColors.grey
+                                                                .withAlpha(50),
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            audioFile.title,
+                                            style: TextStyle(
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.bold,
                                             ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          audioFile.title,
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.bold,
                                           ),
-                                        ),
-                                        Text(
-                                          audioFile.author,
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.grey,
+                                          Text(
+                                            audioFile.author,
+                                            style: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.grey,
+                                            ),
                                           ),
-                                        ),
-                                        Row(
-                                          children: [
-                                            SizedBox(
-                                              width: size.width * 0.4,
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8.r),
-                                                child: LinearProgressIndicator(
-                                                  value: progress,
+                                          Row(
+                                            children: [
+                                              SizedBox(
+                                                width: size.width * 0.4,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        8.r,
+                                                      ),
+                                                  child:
+                                                      LinearProgressIndicator(
+                                                        value: progress,
+                                                        color:
+                                                            AppColors.primary,
+                                                        minHeight: 6.h,
+                                                        backgroundColor:
+                                                            AppColors.grey
+                                                                .withAlpha(50),
+                                                      ),
+                                                ),
+                                              ),
+                                              SizedBox(width: 8.w),
+                                              Text(
+                                                '${(progress * 100).toStringAsFixed(0)}%',
+                                                style: TextStyle(
+                                                  fontSize: 16.sp,
+                                                  fontWeight: FontWeight.w600,
                                                   color: AppColors.primary,
-                                                  minHeight: 6.h,
-                                                  backgroundColor: AppColors
-                                                      .grey
-                                                      .withAlpha(50),
                                                 ),
                                               ),
-                                            ),
-                                            SizedBox(width: 8.w),
-                                            Text(
-                                              '${(progress * 100).toStringAsFixed(0)}%',
-                                              style: TextStyle(
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(16.r),
-                                      child: Image.memory(
-                                        audioFile.coverImageBytes,
-                                        width: size.width * 0.2,
-                                        height: size.height * 0.1,
-                                        fit: BoxFit.fill,
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
-                        );
-                      },
-                    ),
-                  );
-          } else {
-            return const SizedBox.shrink();
-          }
-        },
+                                      const Spacer(),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
+                                        child: Image.memory(
+                                          audioFile.coverImageBytes,
+                                          width: size.width * 0.2,
+                                          height: size.height * 0.1,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          );
+                        },
+                      ),
+                    );
+            } else {
+              return const SizedBox.shrink();
+            }
+          },
+        ),
       ),
     );
   }

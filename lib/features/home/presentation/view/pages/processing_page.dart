@@ -139,7 +139,7 @@ class _ProcessingPageState extends State<ProcessingPage> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    '${S.of(context).the_page} ${ state.currrentPage + 1} ${S.of(context).from} ${widget.pdfDetailsModel.pageCount}',
+                    '${S.of(context).the_page} ${(state.currrentPage == 0 ? 1 : state.currrentPage).clamp(1, state.totalPages)} ${S.of(context).from} ${widget.pdfDetailsModel.pageCount}',
                     style: TextStyle(
                       fontSize: 19.sp,
                       fontWeight: FontWeight.w600,

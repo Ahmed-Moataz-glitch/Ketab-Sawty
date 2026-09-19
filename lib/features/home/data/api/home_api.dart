@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, use_build_context_synchronously
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:pdf_combiner/pdf_combiner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import 'package:pdfx/pdfx.dart' as pdfx;
+import 'package:ketab_sawty/core/utils/audio_combiner_helper.dart';
 
 class HomeApi {
   File pdfFile = File('');
@@ -80,14 +82,21 @@ class HomeApi {
       final info = doc.documentInformation;
       final title = (info.title).trim();
       final author = (info.author).trim();
+      final effectiveTitle =
+          title.isNotEmpty ? title : pdf.name.replaceAll('.pdf', '');
+      var id = effectiveTitle
+          .replaceAll('.pdf', '')
+          .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_')
+          .trim();
+      if (id.isEmpty || id == '_') {
+        id = 'pdf_${DateTime.now().millisecondsSinceEpoch}';
+      }
 
       return PdfDetailsModel(
-        id: title
-            .replaceAll('.pdf', '')
-            .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_'),
+        id: id,
         pdfBytes: bytes,
         coverImageBytes: pageImage?.bytes ?? Uint8List(0),
-        title: title.isNotEmpty ? title : pdf.name.replaceAll('.pdf', ''), // fallback to filename
+        title: effectiveTitle,
         author: author.isNotEmpty ? author : null,
         pageCount: doc.pages.count,
       );
@@ -238,7 +247,7 @@ class HomeApi {
         coverImageBytes: pageImage?.bytes ?? Uint8List(0),
         title: effectiveTitle,
         author: author.isNotEmpty ? author : null,
-        pageCount: pdfxDoc.pagesCount,
+        pageCount: sfDoc.pages.count,
       );
     } finally {
       sfDoc.dispose();
@@ -250,7 +259,10 @@ class HomeApi {
     required String currentVoice,
     required String text,
   }) async {
-    await tts.setLanguage('ar'); // always guarantee Arabic locale
+    try {
+      await tts.stop();
+    } catch (_) {}
+    await tts.setLanguage('ar');
     if (currentVoice.isNotEmpty) {
       try {
         await tts.setVoice({
@@ -261,10 +273,77 @@ class HomeApi {
         debugPrint('Failed to set specific voice $currentVoice: $e');
       }
     }
-    await tts.setSpeechRate(0.45); // 0.0 - 1.0 (varies by platform)
+    await tts.setSpeechRate(0.45);
     await tts.setPitch(1.0);
     debugPrint('Using voice: $currentVoice');
     await tts.speak(text);
+  }
+
+  Future<bool> _synthesizeChunkToFile({
+    required FlutterTts tts,
+    required String text,
+    required String targetPath,
+  }) async {
+    final completer = Completer<bool>();
+
+    tts.setErrorHandler((dynamic msg) {
+      debugPrint('TTS synthesis error from native: $msg');
+      if (!completer.isCompleted) {
+        completer.complete(false);
+      }
+    });
+
+    try {
+      try {
+        await tts.stop();
+      } catch (_) {}
+
+      final synthFuture = tts
+          .synthesizeToFile(text, targetPath, true)
+          .then((res) {
+            if (res is int && res == 0) return false;
+            return true;
+          })
+          .catchError((e) {
+            debugPrint('synthesizeToFile caught error: $e');
+            return false;
+          });
+
+      // Dynamic timeout: generous timeout allowing TTS enough time even on slow devices/emulators
+      final timeoutSec = math.max(60, (text.length * 0.15).ceil());
+      final success = await Future.any<bool>([
+        synthFuture,
+        completer.future,
+      ]).timeout(
+        Duration(seconds: timeoutSec),
+        onTimeout: () {
+          debugPrint(
+            'synthesizeToFile timed out after $timeoutSec seconds for length ${text.length}',
+          );
+          return false;
+        },
+      );
+
+      if (!success) {
+        try {
+          await tts.stop();
+        } catch (_) {}
+        return false;
+      }
+    } finally {
+      try {
+        tts.setErrorHandler((_) {});
+      } catch (_) {}
+    }
+
+    final file = File(targetPath);
+    for (int retry = 0; retry < 15; retry++) {
+      if (await file.exists() && (await file.length()) > 44) {
+        return true;
+      }
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+    return false;
   }
 
   Future<File> createAudioFile({
@@ -273,6 +352,9 @@ class HomeApi {
     required String fileName,
     String? currentVoice,
   }) async {
+    try {
+      await tts.stop();
+    } catch (_) {}
     await tts.setLanguage('ar');
     if (currentVoice != null && currentVoice.isNotEmpty) {
       try {
@@ -281,46 +363,158 @@ class HomeApi {
         debugPrint('Failed to set voice in createAudioFile: $e');
       }
     }
+    await tts.setSpeechRate(0.45);
+    await tts.setPitch(1.0);
     await tts.awaitSynthCompletion(true);
 
     final dir = await getApplicationDocumentsDirectory();
-    final safe = fileName
+    var safe = fileName
         .replaceAll('.pdf', '')
-        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_');
-
-    final wavPath = '${dir.path}/$safe.wav';
-    final wavFile = File(wavPath);
-    await tts.synthesizeToFile(text, wavPath, true);
-
-    if (await wavFile.exists()) {
-      return wavFile;
+        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_')
+        .trim();
+    if (safe.isEmpty || safe == '_') {
+      safe = 'audio_${DateTime.now().millisecondsSinceEpoch}';
     }
 
-    // Check if synthesized with relative name or .mp3
-    final altWav = File('${dir.path}/$safe.wav');
-    if (await altWav.exists()) return altWav;
-    final altMp3 = File('${dir.path}/$safe.mp3');
-    if (await altMp3.exists()) return altMp3;
+    final finalWavFile = File('${dir.path}/$safe.wav');
 
-    await Future.delayed(const Duration(milliseconds: 300));
-    return wavFile;
+    final chunks = AudioCombinerHelper.splitTextIntoChunks(text, maxChunkSize: 700);
+    if (chunks.isEmpty) {
+      throw Exception('النص فارغ، لا يمكن إنشاء ملف صوتي.');
+    }
+
+    if (chunks.length == 1) {
+      bool ok = await _synthesizeChunkToFile(
+        tts: tts,
+        text: chunks.first,
+        targetPath: finalWavFile.path,
+      );
+
+      // If failed with custom voice, try fallback to default voice
+      if (!ok && currentVoice != null && currentVoice.isNotEmpty) {
+        debugPrint('Retrying single chunk with default Arabic voice...');
+        try {
+          await tts.stop();
+          await tts.clearVoice();
+        } catch (_) {}
+        await tts.setLanguage('ar');
+        ok = await _synthesizeChunkToFile(
+          tts: tts,
+          text: chunks.first,
+          targetPath: finalWavFile.path,
+        );
+      }
+
+      if (ok && await finalWavFile.exists() && (await finalWavFile.length()) > 44) {
+        return finalWavFile;
+      }
+    } else {
+      final chunkFiles = <File>[];
+      try {
+        for (int i = 0; i < chunks.length; i++) {
+          final chunkPath = '${dir.path}/${safe}_part_$i.wav';
+          final chunkFile = File(chunkPath);
+          if (await chunkFile.exists()) {
+            try {
+              await chunkFile.delete();
+            } catch (_) {}
+          }
+
+          bool ok = await _synthesizeChunkToFile(
+            tts: tts,
+            text: chunks[i],
+            targetPath: chunkPath,
+          );
+
+          // If failed with custom voice, try fallback to default Arabic voice
+          if (!ok && currentVoice != null && currentVoice.isNotEmpty) {
+            debugPrint('Retrying chunk $i with default Arabic voice...');
+            try {
+              await tts.stop();
+              await tts.clearVoice();
+            } catch (_) {}
+            await tts.setLanguage('ar');
+            ok = await _synthesizeChunkToFile(
+              tts: tts,
+              text: chunks[i],
+              targetPath: chunkPath,
+            );
+          }
+
+          if (ok && await chunkFile.exists() && (await chunkFile.length()) > 44) {
+            chunkFiles.add(chunkFile);
+          } else {
+            debugPrint('Failed to synthesize chunk $i');
+            break;
+          }
+        }
+
+        if (chunkFiles.length == chunks.length) {
+          await AudioCombinerHelper.combineWavFiles(
+            wavFiles: chunkFiles,
+            targetFile: finalWavFile,
+          );
+        }
+      } finally {
+        for (int i = 0; i < chunks.length; i++) {
+          final chunkPath = '${dir.path}/${safe}_part_$i.wav';
+          final cf = File(chunkPath);
+          try {
+            if (await cf.exists()) {
+              await cf.delete();
+            }
+          } catch (_) {}
+        }
+      }
+    }
+
+    if (await finalWavFile.exists() && (await finalWavFile.length()) > 44) {
+      return finalWavFile;
+    }
+
+    final altMp3 = File('${dir.path}/$safe.mp3');
+    if (await altMp3.exists() && (await altMp3.length()) > 44) return altMp3;
+
+    throw Exception('تعذر إنشاء الملف الصوتي؛ يرجى التأكد من اتصال الإنترنت أو تنزيل بيانات الصوت في إعدادات الجهاز.');
   }
 
   Future<bool> isAudioFileExists(String fileName) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final safe = fileName
+    var safe = fileName
         .replaceAll('.pdf', '')
-        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_');
+        .replaceAll(RegExp(r'[^\w\u0600-\u06FF\-]+'), '_')
+        .trim();
+    if (safe.isEmpty || safe == '_') {
+      return false;
+    }
 
+    final dir = await getApplicationDocumentsDirectory();
     final wavFile = File('${dir.path}/$safe.wav');
-    if (await wavFile.exists()) return true;
+    if (await wavFile.exists()) {
+      if (await wavFile.length() > 44) {
+        return true;
+      } else {
+        // Clean up 0-byte or corrupted file
+        try {
+          await wavFile.delete();
+        } catch (_) {}
+      }
+    }
 
     final mp3File = File('${dir.path}/$safe.mp3');
-    if (await mp3File.exists()) return true;
+    if (await mp3File.exists()) {
+      if (await mp3File.length() > 44) {
+        return true;
+      } else {
+        try {
+          await mp3File.delete();
+        } catch (_) {}
+      }
+    }
 
-    // Check legacy storage path if previously generated
     final legacyFile = File('/storage/emulated/0/Music/$safe.mp3');
-    if (await legacyFile.exists()) return true;
+    if (await legacyFile.exists() && (await legacyFile.length()) > 44) {
+      return true;
+    }
 
     return false;
   }
