@@ -110,7 +110,7 @@
     Watch a complete walkthrough of <strong>Ketab Sawty</strong> demonstrating document upload, offline Arabic OCR extraction, text-to-speech narration, and the audiobook player:
   </p>
 
-  <a href="ketab-sawty.mp4" title="Click to open and watch demo video">
+  <a href="https://youtube.com/shorts/er8M5PQyPP4" title="Click to open and watch demo video">
     <img src="Screenshot_1788217779.png" width="300" alt="Ketab Sawty Demo Video Preview" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
     <br/><br/>
     <img src="https://img.shields.io/badge/▶_Watch_Demo_Video-ketab--sawty.mp4-02569B?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video"/>
@@ -118,8 +118,8 @@
 
   <br/><br/>
 
-  <video src="ketab-sawty.mp4" controls width="600" style="max-width: 100%;">
-    Your browser does not support the video tag. <a href="ketab-sawty.mp4">Click here to watch or download the demo video</a>.
+  <video src="https://youtube.com/shorts/er8M5PQyPP4" controls width="600" style="max-width: 100%;">
+    Your browser does not support the video tag. <a href="https://youtube.com/shorts/er8M5PQyPP4">Click here to watch or download the demo video</a>.
   </video>
 
 </div>
