@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://github.com/Ahmed-Moataz-glitch/Ketab-Sawty/blob/development/assets/icons/splash_ios_android_12.png" alt="Ketab Sawty Logo" width="200"/>
+  <img src="https://github.com/Ahmed-Moataz-glitch/Ketab-Sawty/blob/development/assets/icons/launcher_icon.png" alt="Ketab Sawty Logo" width="200"/>
 
   # 🎧 كتاب صوتي | Ketab Sawty
 
@@ -13,6 +13,7 @@
     <a href="https://bloclibrary.dev"><img src="https://img.shields.io/badge/State_Management-Bloc%20%2F%20Cubit-blueviolet?style=for-the-badge" alt="Bloc"/></a>
     <a href="https://pub.dev/packages/hive"><img src="https://img.shields.io/badge/Storage-Hive%20DB-FFA000?style=for-the-badge&logo=hive&logoColor=white" alt="Hive"/></a>
     <a href="#"><img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-success?style=for-the-badge" alt="Architecture"/></a>
+    <a href="#-demo-video"><img src="https://img.shields.io/badge/Demo-Watch_Video-critical?style=for-the-badge&logo=youtube&logoColor=white" alt="Demo Video"/></a>
   </p>
 
   <p align="center">
@@ -27,6 +28,7 @@
 
 - [✨ Key Features](#-key-features)
 - [📱 Screenshots & UI Showcase](#-screenshots--ui-showcase)
+- [🎬 Demo Video](#-demo-video)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🛠️ Tech Stack & Dependencies](#️-tech-stack--dependencies)
 - [📂 Project Structure](#-project-structure)
@@ -100,6 +102,30 @@
 
 ---
 
+## 🎬 Demo Video
+
+<div align="center">
+
+  <p>
+    Watch a complete walkthrough of <strong>Ketab Sawty</strong> demonstrating document upload, offline Arabic OCR extraction, text-to-speech narration, and the audiobook player:
+  </p>
+
+  <a href="ketab-sawty.mp4" title="Click to open and watch demo video">
+    <img src="Screenshot_1788217779.png" width="300" alt="Ketab Sawty Demo Video Preview" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"/>
+    <br/><br/>
+    <img src="https://img.shields.io/badge/▶_Watch_Demo_Video-ketab--sawty.mp4-02569B?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video"/>
+  </a>
+
+  <br/><br/>
+
+  <video src="ketab-sawty.mp4" controls width="600" style="max-width: 100%;">
+    Your browser does not support the video tag. <a href="ketab-sawty.mp4">Click here to watch or download the demo video</a>.
+  </video>
+
+</div>
+
+---
+
 ## 🏗️ System Architecture
 
 The application is engineered strictly adhering to **Clean Architecture** principles and the **BLoC (Business Logic Component)** pattern:
@@ -149,6 +175,7 @@ lib/
 ketab_sawty/
 ├── android/                     # Native Android Gradle configuration
 ├── assets/
+│   ├── demo/                    # App walkthrough & demo video (ketab-sawty.mp4)
 │   ├── fonts/                   # Tajawal Arabic Font family (Regular, Medium, Bold)
 │   ├── icons/                   # App launcher icons & SVG assets
 │   ├── screenshots/             # Application UI screenshots
